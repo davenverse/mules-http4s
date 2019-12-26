@@ -2,11 +2,13 @@ package io.chrisdavenport.mules.http4s
 
 import org.http4s._
 import io.chrisdavenport.mules._
+import io.chrisdavenport.cats.effect.time._
+import cats._
 import cats.effect._
 import cats.implicits._
 import cats.data._
 
-private class Caching[F[_]: Sync](cache: Cache[F, (Method, Uri), CacheItem], isPrivate: Boolean){
+private class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], isPrivate: Boolean){
 
   def request(req: Request[F])(app: Kleisli[Resource[F, ?], Request[F], Response[F]]): Resource[F, Response[F]] = {
     if (CacheRules.requestCanUseCached(req)) {
@@ -31,6 +33,5 @@ private class Caching[F[_]: Sync](cache: Cache[F, (Method, Uri), CacheItem], isP
     }
   }
 
-  
 }
 

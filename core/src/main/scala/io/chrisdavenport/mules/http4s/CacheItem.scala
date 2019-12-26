@@ -1,9 +1,10 @@
 package io.chrisdavenport.mules.http4s
 
+import cats._
 import cats.effect._
 import cats.implicits._
 import org.http4s.HttpDate
-import java.time.Instant
+import io.chrisdavenport.cats.effect.time.JavaTime
 
 final class CacheItem private (
   val response: CachedResponse,
@@ -18,9 +19,10 @@ object CacheItem {
   final class Age private[CacheItem] (val deltaSeconds: Long) extends AnyVal
   final class CacheLifetime private[CacheItem] (val deltaSeconds: Long) extends AnyVal
 
-  def dateNow[F[_]: Sync]: F[HttpDate] = Sync[F].delay(HttpDate.fromInstant(Instant.now)).rethrow
+  def dateNow[F[_]: JavaTime: MonadError[*[_], Throwable]]: F[HttpDate] = 
+    JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow
 
-  def create[F[_]: Sync](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] = 
+  def create[F[_]: JavaTime: MonadError[*[_], Throwable]](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] = 
     dateNow.map(date => 
       new CacheItem(response, date, expires)
     )

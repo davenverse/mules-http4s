@@ -109,6 +109,7 @@ lazy val commonSettings = Seq(
 
 
     "io.chrisdavenport"            %% "mules"                      % "0.4.0-M1",
+    "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.0",
 
     "io.chrisdavenport"           %% "log4cats-core"              % log4catsV,
     "io.chrisdavenport"           %% "log4cats-slf4j"             % log4catsV,
