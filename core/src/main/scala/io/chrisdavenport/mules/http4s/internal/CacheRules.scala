@@ -10,9 +10,6 @@ import cats.implicits._
 
 object CacheRules {
 
-  // def withCached[F[_]](req: Request[F], cachedResponse: Option[(CachedResponse, Age)]) = ???
-
-
   def requestCanUseCached[F[_]](req: Request[F]): Boolean =  
     methodIsCacheable(req.method) &&
     !req.headers.get(`Cache-Control`).exists{
@@ -21,9 +18,8 @@ object CacheRules {
         case _ => false
       }
     }
-    
 
-  private val cacheableMethods = Seq(
+  private val cacheableMethods: Set[Method] = Set(
     Method.GET,
     Method.HEAD,
     // Method.POST // Eventually make this work.
@@ -31,7 +27,7 @@ object CacheRules {
 
   def methodIsCacheable(m: Method): Boolean = cacheableMethods.contains(m)
 
-  private val cacheableStatus = Seq(
+  private val cacheableStatus: Set[Status] = Set(
     Status.Ok, // 200
     Status.NonAuthoritativeInformation, // 203
     Status.NoContent, // 204
@@ -49,7 +45,9 @@ object CacheRules {
 
   def cacheAgeAcceptable[F[_]](req: Request[F], item: CacheItem, now: HttpDate): Boolean = {
     req.headers.get(`Cache-Control`) match {
-      case None => true
+      case None => 
+        // TODO: Investigate how this check works with cache-control
+        item.expires.map(expiresAt => expiresAt >= now).getOrElse(true)
       case Some(`Cache-Control`(values)) => 
         val age = CacheItem.age(item.created, now)
         val lifetime = CacheItem.cacheLifetime(item.expires, now)
@@ -72,6 +70,8 @@ object CacheRules {
             expiresAt <- item.expires
           } yield (expiresAt.epochSecond - now.epochSecond).seconds <= minFresh
         }.getOrElse(true)
+        
+        // println(s"Age- $age, Lifetime- $lifetime, maxAgeMet: $maxAgeMet, maxStaleMet: $maxStaleMet, minFreshMet: $minFreshMet")
         
         maxAgeMet && maxStaleMet && minFreshMet
     }
@@ -115,17 +115,23 @@ object CacheRules {
     }
 
   def isCacheable[F[_]](req: Request[F], response: Response[F], cacheType: CacheType): Boolean = {
-    if (cacheableMethods.contains(req.method)) {
+    if (!cacheableMethods.contains(req.method)) {
+      // println(s"Request Method ${req.method} - not Cacheable")
       false
-    } else if (statusIsCacheable(response.status)) {
+    } else if (!statusIsCacheable(response.status)) {
+      // println(s"Response Status ${response.status} - not Cacheable")
       false
     } else if (cacheControlNoStoreExists(response)) {
+      // println("Cache-Control No-Store is present - not Cacheable")
       false
     } else if (cacheType.isShared && cacheControlPrivateExists(response)) {
+      // println("Cache is shared and Cache-Control private exists - not Cacheable")
       false
     } else if (cacheType.isShared && response.headers.get(Vary).exists(h => h.value === "*")) {
+      // println("Cache is shared and Vary header exists as * - not Cacheable")
       false
     } else if (cacheType.isShared && authorizationHeaderExists(response) && !cacheControlPublicExists(response)) {
+      // println("Cache is Shared and Authorization Header is present and Cache-Control public is not present - not Cacheable")
       false
     } else if (req.method === Method.GET || req.method === Method.HEAD) {
       true
@@ -138,7 +144,7 @@ object CacheRules {
 
   object FreshnessAndExpiration {
     // Age in Seconds
-    private def getAge[F[_]](now: HttpDate, response: Response[F]): FiniteDuration = {
+    private def getAge[F[_]](now: HttpDate, response: Message[F]): FiniteDuration = {
 
       // Age Or Zero
       val initAgeSeconds: Long = now.epochSecond - 
@@ -153,7 +159,7 @@ object CacheRules {
 
     // Since We do not emit warnings on cache times over 24 hours, limit cache time
     // to max of 24 hours.
-    private def freshnessLifetime[F[_]](now: HttpDate, response: Response[F]) = {
+    private def freshnessLifetime[F[_]](now: HttpDate, response: Message[F]) = {
       response.headers.get(`Cache-Control`)
         .flatMap{ 
             case `Cache-Control`(directives) => 
@@ -179,7 +185,7 @@ object CacheRules {
 
     }
 
-    def getExpires[F[_]](now: HttpDate, response: Response[F]): HttpDate = {
+    def getExpires[F[_]](now: HttpDate, response: Message[F]): HttpDate = {
       val age = getAge(now, response)
       val lifetime = freshnessLifetime(now, response)
       val ttl = lifetime - age

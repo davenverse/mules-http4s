@@ -21,12 +21,17 @@ private class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] private (cach
         out <- cachedValue match {
           case None => 
             if (CacheRules.onlyIfCached(req)) Response[F](Status.GatewayTimeout).pure[Resource[F, ?]]
-            else app.run(req)
+            else {
+              // println("No Value Present in Cache")
+              app.run(req)
               .evalMap(withResponse(req, _))
+            }
           case Some(item) => 
             if (CacheRules.cacheAgeAcceptable(req, item, now)) {
+              // println("Cache Age was Acceptable")
               item.response.toResponse[F].pure[Resource[F, ?]]
             } else {
+              // println("Cache Age Not Acceptable")
               app.run(req)
                 .evalMap(withResponse(req, _))
             }
@@ -47,7 +52,10 @@ private class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] private (cach
         item <- CacheItem.create(cachedResp, expires.some)
         _ <- cache.insert((req.method, req.uri), item)
       } yield cachedResp.toResponse[F]
-    } else resp.pure[F]
+    
+    } else {
+      resp.pure[F]
+    }
   }
 
 }
