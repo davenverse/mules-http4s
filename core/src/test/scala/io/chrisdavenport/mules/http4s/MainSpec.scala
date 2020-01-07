@@ -3,7 +3,7 @@ package io.chrisdavenport.mules.http4s
 import org.specs2._
 import cats.effect._
 
-object MainSpec extends mutable.Specification {
+class MainSpec extends mutable.Specification {
 
   "Main" should {
     "run a println" in {

@@ -1,10 +1,10 @@
-package io.chrisdavenport.mules.http4s
+package io.chrisdavenport.mules.http4s.internal
 
 import io.chrisdavenport.vault.Vault
 import org.http4s._
 import fs2._
 import scodec.bits.ByteVector
-import cats.effect.Sync
+import cats.Functor
 import cats.implicits._
 
 final class CachedResponse private (
@@ -19,7 +19,7 @@ final class CachedResponse private (
 
 object CachedResponse {
 
-  def fromResponse[F[_]: Sync](response: Response[F]): F[CachedResponse] = {
+  def fromResponse[F[_]: Functor](response: Response[F])(implicit compiler: Stream.Compiler[F,F]): F[CachedResponse] = {
     response.body.compile.to(ByteVector).map{bv => 
       new CachedResponse(
         response.status,
