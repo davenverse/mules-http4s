@@ -6,7 +6,9 @@ import org.http4s._
 import org.http4s.headers._
 import org.http4s.CacheDirective._
 import scala.concurrent.duration._
+import cats._
 import cats.implicits._
+import cats.data._
 
 object CacheRules {
 
@@ -34,6 +36,7 @@ object CacheRules {
     Status.PartialContent, // 206
     Status.MultipleChoices, // 300
     Status.MovedPermanently, // 301
+    // Status.NotModified , // 304
     Status.NotFound, // 404
     Status.MethodNotAllowed, // 405
     Status.Gone, // 410
@@ -46,7 +49,10 @@ object CacheRules {
   def cacheAgeAcceptable[F[_]](req: Request[F], item: CacheItem, now: HttpDate): Boolean = {
     req.headers.get(`Cache-Control`) match {
       case None => 
+        
         // TODO: Investigate how this check works with cache-control
+        // If the data in the cache is expired and client does not explicitly
+        // accept stale data, then age is not ok.
         item.expires.map(expiresAt => expiresAt >= now).getOrElse(true)
       case Some(`Cache-Control`(values)) => 
         val age = CacheItem.age(item.created, now)
@@ -114,6 +120,14 @@ object CacheRules {
       case _ => false
     }
 
+  def mustRevalidate[F[_]](response: Message[F]): Boolean = {
+    response.headers.get(`Cache-Control`).exists{_.values.exists{ 
+      case CacheDirective.`no-cache`(_) => true
+      case CacheDirective.`max-age`(age) if age <= 0.seconds => true
+      case _ => false
+    }} || response.headers.get(Pragma).exists(_.value === "no-cache")
+  }
+
   def isCacheable[F[_]](req: Request[F], response: Response[F], cacheType: CacheType): Boolean = {
     if (!cacheableMethods.contains(req.method)) {
       // println(s"Request Method ${req.method} - not Cacheable")
@@ -133,6 +147,8 @@ object CacheRules {
     } else if (cacheType.isShared && authorizationHeaderExists(response) && !cacheControlPublicExists(response)) {
       // println("Cache is Shared and Authorization Header is present and Cache-Control public is not present - not Cacheable")
       false
+    } else if (mustRevalidate(response) && !(response.headers.get(ETag).isDefined || response.headers.get(`Last-Modified`).isDefined)) {
+      false
     } else if (req.method === Method.GET || req.method === Method.HEAD) {
       true
     } else if (cacheControlPublicExists(response) || cacheControlPrivateExists(response)) {
@@ -140,6 +156,28 @@ object CacheRules {
     } else {
       response.headers.get(Expires).isDefined
     }
+  }
+
+  def shouldInvalidate[F[_]](request: Request[F], response: Response[F]): Boolean = {
+    if (Set(Status.NotFound, Status.Gone).contains(response.status)) {
+      true
+    } else if (Set(Method.GET, Method.HEAD: Method).contains(request.method)){
+      false
+    } else response.status.isSuccess
+  }
+
+  def getIfMatch(cachedResponse: CachedResponse): Option[`If-None-Match`] = 
+    cachedResponse.headers.get(ETag).map(_.tag).flatMap{etag => 
+    if (!etag.weak) `If-None-Match`(NonEmptyList.of(etag).some).some
+    else None
+  }
+
+  def getIfUnmodifiedSince(cachedResponse: CachedResponse): Option[`If-Unmodified-Since`] = {
+    for {
+      lastModified <- cachedResponse.headers.get(`Last-Modified`)
+      date <- cachedResponse.headers.get(Date)
+      _ <- Alternative[Option].guard(date.date.epochSecond - lastModified.date.epochSecond >= 60L)
+    } yield `If-Unmodified-Since`(lastModified.date)
   }
 
   object FreshnessAndExpiration {

@@ -11,7 +11,13 @@ final class CacheItem private (
   val response: CachedResponse,
   val created: HttpDate,
   val expires: Option[HttpDate]
-)
+){
+  def withResponse(cachedResponse: CachedResponse) = new CacheItem(
+    cachedResponse,
+    this.created,
+    this.expires
+  )
+}
 
 object CacheItem {
 

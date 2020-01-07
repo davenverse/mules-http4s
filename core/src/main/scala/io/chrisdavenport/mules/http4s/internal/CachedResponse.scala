@@ -14,6 +14,13 @@ final class CachedResponse private (
   val body: ByteVector,
   val attributes: Vault
 ){
+  def withHeaders(headers: Headers): CachedResponse = new CachedResponse(
+    this.status,
+    this.httpVersion,
+    headers,
+    this.body,
+    this.attributes
+  )
   def toResponse[F[_]]: Response[F] = CachedResponse.toResponse(this)
 }
 

@@ -22,18 +22,18 @@ private class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] private (cach
           case None => 
             if (CacheRules.onlyIfCached(req)) Response[F](Status.GatewayTimeout).pure[Resource[F, ?]]
             else {
-              // println("No Value Present in Cache")
               app.run(req)
               .evalMap(withResponse(req, _))
             }
           case Some(item) => 
             if (CacheRules.cacheAgeAcceptable(req, item, now)) {
-              // println("Cache Age was Acceptable")
               item.response.toResponse[F].pure[Resource[F, ?]]
             } else {
-              // println("Cache Age Not Acceptable")
-              app.run(req)
-                .evalMap(withResponse(req, _))
+              app.run(
+                req
+                .putHeaders(CacheRules.getIfMatch(item.response).toSeq:_*)
+                .putHeaders(CacheRules.getIfUnmodifiedSince(item.response).toSeq:_*)
+              ).evalMap(withResponse(req, _))
             }
         }
       } yield out
@@ -44,17 +44,34 @@ private class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] private (cach
   }
 
   private def withResponse(req: Request[F], resp: Response[F]): F[Response[F]] = {
-    if (CacheRules.isCacheable(req, resp, cacheType)){
-      for {
-        cachedResp <- CachedResponse.fromResponse(resp)
-        now <- JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow
-        expires = CacheRules.FreshnessAndExpiration.getExpires(now, resp)
-        item <- CacheItem.create(cachedResp, expires.some)
-        _ <- cache.insert((req.method, req.uri), item)
-      } yield cachedResp.toResponse[F]
-    
-    } else {
-      resp.pure[F]
+    {
+      if (CacheRules.shouldInvalidate(req, resp)){
+        cache.delete((req.method, req.uri))
+      } else Applicative[F].unit 
+    } *> {
+      if (CacheRules.isCacheable(req, resp, cacheType)){
+        for {
+          cachedResp <- resp.status match {
+            case Status.NotModified => 
+              cache.lookup((req.method, req.uri))
+                .flatMap(
+                  _.map{item => 
+                    val cached = item.response
+                    cached.withHeaders(resp.headers ++ cached.headers).pure[F]
+                  }
+                  .getOrElse(CachedResponse.fromResponse(resp))
+                )
+            case _ => CachedResponse.fromResponse(resp)
+          }
+          now <- JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow
+          expires = CacheRules.FreshnessAndExpiration.getExpires(now, resp)
+          item <- CacheItem.create(cachedResp, expires.some)
+          _ <- cache.insert((req.method, req.uri), item)
+        } yield cachedResp.toResponse[F]
+      
+      } else {
+        resp.pure[F]
+      }
     }
   }
 
@@ -65,7 +82,6 @@ object Caching {
 
   def client[F[_]: Bracket[*[_], Throwable]: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType)(implicit compiler: Stream.Compiler[F, F]): Client[F] => Client[F] = {
     val caching = new Caching[F](cache, cacheType){}
-
     {client: Client[F] => 
       Client(req => 
         caching.request(Kleisli(req => client.run(req)))(req)

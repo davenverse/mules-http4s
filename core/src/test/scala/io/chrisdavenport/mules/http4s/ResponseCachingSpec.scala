@@ -10,6 +10,7 @@ import org.http4s.implicits._
 import org.http4s.headers._
 // import org.http4s.dsl.io._
 import scala.concurrent.duration._
+import io.chrisdavenport.cats.effect.time.JavaTime
 
 class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
   "Caching Responses" should {
@@ -17,7 +18,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
       for {
         cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
         ref <- Ref[IO].of(0)
-        now <- Sync[IO].delay(HttpDate.fromInstant(java.time.Instant.now)).rethrow
+        now <- JavaTime[IO].getInstant.map(HttpDate.fromInstant).rethrow
         httpApp = HttpRoutes.of[IO]{
           case _ => ref.modify(i => (i+1, i)).map{i => 
             Response[IO](Status.Ok)
@@ -50,7 +51,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
       for {
         cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
         ref <- Ref[IO].of(0)
-        now <- Sync[IO].delay(HttpDate.fromInstant(java.time.Instant.now)).rethrow
+        now <- JavaTime[IO].getInstant.map(HttpDate.fromInstant).rethrow
         lifetime = 24.hours
         httpApp = HttpRoutes.of[IO]{
           case _ => ref.modify(i => (i+1, i)).map{i => 
@@ -86,7 +87,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
       for {
         cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
         ref <- Ref[IO].of(0)
-        now <- Sync[IO].delay(HttpDate.fromInstant(java.time.Instant.now)).rethrow
+        now <- JavaTime[IO].getInstant.map(HttpDate.fromInstant).rethrow
         lifetime = 24.hours
         httpApp = HttpRoutes.of[IO]{
           case _ => ref.modify(i => (i+1, i)).map{i => 
@@ -123,7 +124,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
       for {
         cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
         ref <- Ref[IO].of(0)
-        now <- Sync[IO].delay(HttpDate.fromInstant(java.time.Instant.now)).rethrow
+        now <- JavaTime[IO].getInstant.map(HttpDate.fromInstant).rethrow
         lifetime = 24.hours
         httpApp = HttpRoutes.of[IO]{
           case _ => ref.modify(i => (i+1, i)).map{i => 
@@ -159,7 +160,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
       for {
         cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
         ref <- Ref[IO].of(0)
-        now <- Sync[IO].delay(HttpDate.fromInstant(java.time.Instant.now)).rethrow
+        now <- JavaTime[IO].getInstant.map(HttpDate.fromInstant).rethrow
         lifetime = 1.second
         httpApp = HttpRoutes.of[IO]{
           case _ => ref.modify(i => (i+1, i)).map{i => 
