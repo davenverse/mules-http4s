@@ -10,6 +10,8 @@ val doobieV = "0.8.8"
 val log4catsV = "1.0.1"
 val specs2V = "4.8.1"
 
+val mulesV = "0.4.0-M1"
+
 val kindProjectorV = "0.11.0"
 val betterMonadicForV = "0.3.1"
 
@@ -69,6 +71,10 @@ lazy val site = project.in(file("site"))
       micrositeExtraMdFiles := Map(
           file("CODE_OF_CONDUCT.md")  -> ExtraMdFileConfig("code-of-conduct.md",   "page", Map("title" -> "code of conduct",   "section" -> "code of conduct",   "position" -> "100")),
           file("LICENSE")             -> ExtraMdFileConfig("license.md",   "page", Map("title" -> "license",   "section" -> "license",   "position" -> "101"))
+      ),
+      libraryDependencies ++= Seq(
+        "io.chrisdavenport" %% "mules-caffeine" % mulesV,
+        "org.http4s" %% "http4s-async-http-client" % http4sV,
       )
     )
   }
@@ -91,7 +97,7 @@ lazy val commonSettings = Seq(
     "org.http4s"                  %% "http4s-server"              % http4sV,
     "org.http4s"                  %% "http4s-client"              % http4sV,
 
-    "io.chrisdavenport"            %% "mules"                      % "0.4.0-M1",
+    "io.chrisdavenport"            %% "mules"                      % mulesV,
     "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.0",
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
