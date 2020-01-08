@@ -5,6 +5,7 @@ import org.http4s._
 import io.chrisdavenport.mules._
 import io.chrisdavenport.cats.effect.time._
 import cats._
+import cats.arrow.FunctionK
 import cats.effect._
 import cats.implicits._
 import cats.data._
@@ -13,33 +14,33 @@ import org.http4s.client.Client
 
 private class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] private (cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType)(implicit Compiler: Stream.Compiler[F,F]){
 
-  def request(app: Kleisli[Resource[F, ?], Request[F], Response[F]])(req: Request[F]): Resource[F, Response[F]] = {
+  def request[G[_]: FlatMap](app: Kleisli[G, Request[F], Response[F]], fk: F ~> G)(req: Request[F]): G[Response[F]] = {
     if (CacheRules.requestCanUseCached(req)) {
       for {
-        cachedValue <- Resource.liftF(cache.lookup((req.method, req.uri)))
-        now <- Resource.liftF(JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow)
+        cachedValue <- fk(cache.lookup((req.method, req.uri)))
+        now <- fk(JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow)
         out <- cachedValue match {
           case None => 
-            if (CacheRules.onlyIfCached(req)) Response[F](Status.GatewayTimeout).pure[Resource[F, ?]]
+            if (CacheRules.onlyIfCached(req)) fk(Response[F](Status.GatewayTimeout).pure[F])
             else {
               app.run(req)
-              .evalMap(withResponse(req, _))
+              .flatMap(resp => fk(withResponse(req, resp)))
             }
           case Some(item) => 
             if (CacheRules.cacheAgeAcceptable(req, item, now)) {
-              item.response.toResponse[F].pure[Resource[F, ?]]
+              fk(item.response.toResponse[F].pure[F])
             } else {
               app.run(
                 req
                 .putHeaders(CacheRules.getIfMatch(item.response).toSeq:_*)
                 .putHeaders(CacheRules.getIfUnmodifiedSince(item.response).toSeq:_*)
-              ).evalMap(withResponse(req, _))
+              ).flatMap(resp => fk(withResponse(req, resp)))
             }
         }
       } yield out
     } else {
       app.run(req)
-        .evalMap(withResponse(req, _))
+        .flatMap(resp => fk(withResponse(req, resp)))
     }
   }
 
@@ -84,7 +85,7 @@ object Caching {
     val caching = new Caching[F](cache, cacheType){}
     {client: Client[F] => 
       Client(req => 
-        caching.request(Kleisli(req => client.run(req)))(req)
+        caching.request(Kleisli(req => client.run(req)), Resource.liftK)(req)
       )
     }
   }
@@ -93,8 +94,16 @@ object Caching {
     val caching = new Caching[F](cache, cacheType){}
     {app: HttpApp[F] => 
       Kleisli{ req => 
-        caching.request(Kleisli(req => Resource.liftF(app.run(req))))(req)
-        .use(_.pure[F])
+        caching.request(app, FunctionK.id)(req)
+      }
+    }
+  }
+
+  def httpRoutes[F[_]: Bracket[*[_], Throwable]: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType)(implicit compiler: Stream.Compiler[F, F]): HttpRoutes[F] => HttpRoutes[F] = {
+    val caching = new Caching[F](cache, cacheType){}
+    {app: HttpRoutes[F] => 
+      Kleisli{ req => 
+        caching.request(app, OptionT.liftK)(req)
       }
     }
   }

@@ -21,8 +21,8 @@ final class CacheItem private (
 
 object CacheItem {
 
-  final class Age private[CacheItem] (val deltaSeconds: Long) extends AnyVal
-  final class CacheLifetime private[CacheItem] (val deltaSeconds: Long) extends AnyVal
+  final private[http4s] class Age private[CacheItem] (val deltaSeconds: Long) extends AnyVal
+  final private[http4s] class CacheLifetime private[CacheItem] (val deltaSeconds: Long) extends AnyVal
 
 
   def create[F[_]: JavaTime: MonadError[*[_], Throwable]](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] = 
@@ -30,9 +30,9 @@ object CacheItem {
       new CacheItem(response, date, expires)
     )
 
-  def age(created: HttpDate, now: HttpDate): Age = new Age(now.epochSecond - created.epochSecond)
+  private[http4s] def age(created: HttpDate, now: HttpDate): Age = new Age(now.epochSecond - created.epochSecond)
 
-  def cacheLifetime(expires: Option[HttpDate], now: HttpDate): Option[CacheLifetime] = expires.map{expiredAt =>  
+  private[http4s] def cacheLifetime(expires: Option[HttpDate], now: HttpDate): Option[CacheLifetime] = expires.map{expiredAt =>  
     new CacheLifetime(expiredAt.epochSecond - now.epochSecond)
   }
 
