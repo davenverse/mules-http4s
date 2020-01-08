@@ -7,9 +7,6 @@ sealed trait CacheType {
   }
 }
 object CacheType {
-  def `private`: CacheType = Private
-  def `public`: CacheType = Public
-  
   case object Public extends CacheType
   case object Private extends CacheType
 }

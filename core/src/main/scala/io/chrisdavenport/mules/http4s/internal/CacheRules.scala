@@ -10,7 +10,7 @@ import cats._
 import cats.implicits._
 import cats.data._
 
-object CacheRules {
+private[http4s] object CacheRules {
 
   def requestCanUseCached[F[_]](req: Request[F]): Boolean =  
     methodIsCacheable(req.method) &&

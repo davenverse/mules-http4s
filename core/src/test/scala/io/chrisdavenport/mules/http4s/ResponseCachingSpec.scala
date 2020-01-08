@@ -33,7 +33,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
               )
           }
         }.orNotFound
-        cached = Caching.httpApp(cache, CacheType.Private)
+        cached = CacheMiddleware.httpApp(cache, CacheType.Private)
         newApp = cached(httpApp)
         request = Request[IO]()
 
@@ -69,7 +69,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
               )
           }
         }.orNotFound
-        cached = Caching.httpApp(cache, CacheType.Public)
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
         newApp = cached(httpApp)
         request = Request[IO]()
 
@@ -105,7 +105,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
               )
           }
         }.orNotFound
-        cached = Caching.httpApp(cache, CacheType.Public)
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
         newApp = cached(httpApp)
         request = Request[IO]()
 
@@ -142,7 +142,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
               )
           }
         }.orNotFound
-        cached = Caching.httpApp(cache, CacheType.Private)
+        cached = CacheMiddleware.httpApp(cache, CacheType.Private)
         newApp = cached(httpApp)
         request = Request[IO]()
 
@@ -178,7 +178,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
               )
           }
         }.orNotFound
-        cached = Caching.httpApp(cache, CacheType.Private)
+        cached = CacheMiddleware.httpApp(cache, CacheType.Private)
         newApp = cached(httpApp)
         request = Request[IO]()
 
