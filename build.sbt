@@ -93,15 +93,10 @@ lazy val commonSettings = Seq(
 
     "io.chrisdavenport"            %% "mules"                      % "0.4.0-M1",
     "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.0",
-
-    // "io.chrisdavenport"           %% "log4cats-core"              % log4catsV,
-    // "io.chrisdavenport"           %% "log4cats-slf4j"             % log4catsV,
-    // "io.chrisdavenport"           %% "log4cats-testing"           % log4catsV     % Test,
-
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
-    "com.codecommit" %% "cats-effect-testing-specs2" % "0.3.0" %  Test,
-    "org.http4s"                  %% "http4s-dsl"                 % http4sV % Test,
+    "com.codecommit"              %% "cats-effect-testing-specs2" % "0.3.0"       %  Test,
+    "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
   )
 )
 
