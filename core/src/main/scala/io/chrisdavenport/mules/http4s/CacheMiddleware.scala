@@ -10,6 +10,11 @@ import cats.data.{Kleisli, OptionT}
 import fs2.Stream
 import cats.arrow.FunctionK
 
+/**
+ * Middlewares that allow one to cache full servers or clients.
+ * 
+ * All Constraints - Bracket, JavaTime, and Compiler are satisfied by Sync and Clock
+ **/
 object CacheMiddleware {
 
   def client[F[_]: Bracket[*[_], Throwable]: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType)(implicit compiler: Stream.Compiler[F, F]): Client[F] => Client[F] = {

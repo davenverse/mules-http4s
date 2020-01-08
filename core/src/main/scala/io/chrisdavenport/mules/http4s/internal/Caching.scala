@@ -74,10 +74,3 @@ private[http4s] class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] priva
   }
 
 }
-
-
-object Caching {
-
-
-}
-

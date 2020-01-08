@@ -7,7 +7,7 @@ import scodec.bits.ByteVector
 import cats.Functor
 import cats.implicits._
 
-final class CachedResponse private (
+final private[http4s] class CachedResponse private (
   val status: Status,
   val httpVersion: HttpVersion,
   val headers: Headers,
@@ -24,7 +24,7 @@ final class CachedResponse private (
   def toResponse[F[_]]: Response[F] = CachedResponse.toResponse(this)
 }
 
-object CachedResponse {
+private[http4s] object CachedResponse {
 
   def fromResponse[F[_]: Functor](response: Response[F])(implicit compiler: Stream.Compiler[F,F]): F[CachedResponse] = {
     response.body.compile.to(ByteVector).map{bv => 

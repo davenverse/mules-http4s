@@ -7,22 +7,26 @@ import cats.implicits._
 import org.http4s.HttpDate
 import io.chrisdavenport.cats.effect.time.JavaTime
 
+/**
+ * Cache Items are what we place in the cache, this is exposed
+ * so that caches can be constructed by the user for this type
+ **/
 final class CacheItem private (
-  val response: CachedResponse,
-  val created: HttpDate,
-  val expires: Option[HttpDate]
+  private[http4s] val response: CachedResponse,
+  private[http4s] val created: HttpDate,
+  private[http4s] val expires: Option[HttpDate]
 ){
-  def withResponse(cachedResponse: CachedResponse) = new CacheItem(
+  private[http4s] def withResponse(cachedResponse: CachedResponse) = new CacheItem(
     cachedResponse,
     this.created,
     this.expires
   )
 }
 
-object CacheItem {
+private[http4s] object CacheItem {
 
-  final private[http4s] class Age private[CacheItem] (val deltaSeconds: Long) extends AnyVal
-  final private[http4s] class CacheLifetime private[CacheItem] (val deltaSeconds: Long) extends AnyVal
+  final class Age private[CacheItem] (val deltaSeconds: Long) extends AnyVal
+  final class CacheLifetime private[CacheItem] (val deltaSeconds: Long) extends AnyVal
 
 
   def create[F[_]: JavaTime: MonadError[*[_], Throwable]](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] = 
@@ -30,9 +34,9 @@ object CacheItem {
       new CacheItem(response, date, expires)
     )
 
-  private[http4s] def age(created: HttpDate, now: HttpDate): Age = new Age(now.epochSecond - created.epochSecond)
+  def age(created: HttpDate, now: HttpDate): Age = new Age(now.epochSecond - created.epochSecond)
 
-  private[http4s] def cacheLifetime(expires: Option[HttpDate], now: HttpDate): Option[CacheLifetime] = expires.map{expiredAt =>  
+  def cacheLifetime(expires: Option[HttpDate], now: HttpDate): Option[CacheLifetime] = expires.map{expiredAt =>  
     new CacheLifetime(expiredAt.epochSecond - now.epochSecond)
   }
 
