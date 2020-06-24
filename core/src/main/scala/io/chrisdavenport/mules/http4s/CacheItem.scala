@@ -23,12 +23,12 @@ object CacheItem {
       new CacheItem(date, expires, response)
     )
 
-  final case class Age(val deltaSeconds: Long) extends AnyVal
-  object Age {
+  private[http4s] final case class Age(val deltaSeconds: Long) extends AnyVal
+  private[http4s] object Age {
     def of(created: HttpDate, now: HttpDate): Age = new Age(now.epochSecond - created.epochSecond)
   }
-  final case class CacheLifetime(val deltaSeconds: Long) extends AnyVal
-  object CacheLifetime {
+  private[http4s] final case class CacheLifetime(val deltaSeconds: Long) extends AnyVal
+  private[http4s] object CacheLifetime {
     def of(expires: Option[HttpDate], now: HttpDate): Option[CacheLifetime] = expires.map{expiredAt =>  
       new CacheLifetime(expiredAt.epochSecond - now.epochSecond)
     }
