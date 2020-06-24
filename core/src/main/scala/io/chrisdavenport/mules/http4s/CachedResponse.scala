@@ -1,39 +1,38 @@
-package io.chrisdavenport.mules.http4s.internal
+package io.chrisdavenport.mules.http4s
 
 import io.chrisdavenport.vault.Vault
 import org.http4s._
 import fs2._
-import scodec.bits.ByteVector
-import cats.Functor
-import cats.implicits._
 
-final private[http4s] class CachedResponse private (
-  val status: Status,
-  val httpVersion: HttpVersion,
-  val headers: Headers,
-  val body: ByteVector,
-  val attributes: Vault
+import cats._
+import cats.implicits._
+import scodec.bits.ByteVector
+
+// As attributes can be unbound. We cannot cache them as they may not be safe to do so.
+final case class CachedResponse(
+  status: Status,
+  httpVersion: HttpVersion,
+  headers: Headers,
+  body: ByteVector
 ){
   def withHeaders(headers: Headers): CachedResponse = new CachedResponse(
     this.status,
     this.httpVersion,
     headers,
-    this.body,
-    this.attributes
+    this.body
   )
   def toResponse[F[_]]: Response[F] = CachedResponse.toResponse(this)
 }
 
-private[http4s] object CachedResponse {
+object CachedResponse {
 
-  def fromResponse[F[_]: Functor](response: Response[F])(implicit compiler: Stream.Compiler[F,F]): F[CachedResponse] = {
-    response.body.compile.to(ByteVector).map{bv => 
+  def fromResponse[F[_], G[_]: Functor](response: Response[F])(implicit compiler: Stream.Compiler[F,G]): G[CachedResponse] = {
+    response.body.compile.to(ByteVector).map{bv =>
       new CachedResponse(
         response.status,
         response.httpVersion,
         response.headers,
-        bv,
-        response.attributes
+        bv
       )
     }
   }
@@ -44,6 +43,6 @@ private[http4s] object CachedResponse {
       cachedResponse.httpVersion,
       cachedResponse.headers,
       Stream.chunk(Chunk.byteVector(cachedResponse.body)),
-      cachedResponse.attributes
+      Vault.empty
     )
 }

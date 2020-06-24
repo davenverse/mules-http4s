@@ -57,9 +57,9 @@ private[http4s] class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] priva
                     val cached = item.response
                     cached.withHeaders(resp.headers ++ cached.headers).pure[F]
                   }
-                  .getOrElse(CachedResponse.fromResponse(resp))
+                  .getOrElse(CachedResponse.fromResponse[F, F](resp))
                 )
-            case _ => CachedResponse.fromResponse(resp)
+            case _ => CachedResponse.fromResponse[F, F](resp)
           }
           now <- JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow
           expires = CacheRules.FreshnessAndExpiration.getExpires(now, resp)
