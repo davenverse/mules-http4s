@@ -47,12 +47,15 @@ object CachedResponse {
   private[http4s] val headersCodec : Codec[Headers] = {
     cstring.exmapc{
       s => 
-        s.split("\r\n").toList.traverse{line => 
-          val idx = line.indexOf(':')
-          if (idx >= 0) {
-            Attempt.successful(Header(line.substring(0, idx), line.substring(idx + 1).trim))
-          } else Attempt.failure[Header](Err(s"No : found in Header - $line"))
-        }.map(Headers(_))
+        if (s.isEmpty()) 
+          Attempt.successful(Headers.empty)
+        else
+          s.split("\r\n").toList.traverse{line => 
+            val idx = line.indexOf(':')
+            if (idx >= 0) {
+              Attempt.successful(Header(line.substring(0, idx), line.substring(idx + 1).trim))
+            } else Attempt.failure[Header](Err(s"No : found in Header - $line"))
+          }.map(Headers(_))
         
     }{h => 
       Attempt.successful(
@@ -66,7 +69,7 @@ object CachedResponse {
     (statusCodec :: httpVersionCodec :: headersCodec :: bytes).as[CachedResponse]
 
   def fromResponse[F[_], G[_]: Functor](response: Response[F])(implicit compiler: Stream.Compiler[F,G]): G[CachedResponse] = {
-    response.body.compile.to(ByteVector).map{bv => 
+    response.body.compile.to(ByteVector).map{bv =>
       new CachedResponse(
         response.status,
         response.httpVersion,
@@ -76,7 +79,6 @@ object CachedResponse {
     }
   }
 
-  // No Attributes are populated on cached entries
   def toResponse[F[_]](cachedResponse: CachedResponse): Response[F] = 
     Response(
       cachedResponse.status,
