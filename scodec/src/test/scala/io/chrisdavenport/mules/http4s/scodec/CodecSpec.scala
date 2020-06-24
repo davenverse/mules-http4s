@@ -1,5 +1,6 @@
-package io.chrisdavenport.mules.http4s
+package io.chrisdavenport.mules.http4s.scodec
 
+import io.chrisdavenport.mules.http4s._
 import Arbitraries._
 
 class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCheck {
@@ -7,8 +8,8 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
   "CachedResponse Codec" should {
     "round trip succesfully" in prop{ cached: CachedResponse =>
 
-      val encoded = CachedResponse.codec.encode(cached)
-      val decoded = encoded.flatMap(bv => CachedResponse.codec.decode(bv))
+      val encoded = cachedResponseCodec.encode(cached)
+      val decoded = encoded.flatMap(bv => cachedResponseCodec.decode(bv))
 
       decoded.toEither must beRight.like{
         case a  => a.value must_=== cached
@@ -19,8 +20,8 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
   "CacheItem Codec" should {
     "round trip succesfully" in prop { cached: CacheItem =>
 
-      val encoded = CacheItem.codec.encode(cached)
-      val decoded = encoded.flatMap(bv => CacheItem.codec.decode(bv))
+      val encoded = cacheItemCodec.encode(cached)
+      val decoded = encoded.flatMap(bv => cacheItemCodec.decode(bv))
 
       decoded.toEither must beRight.like{
         case a  => a.value must_=== cached

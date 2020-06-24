@@ -5,8 +5,6 @@ import cats._
 import cats.implicits._
 import org.http4s.HttpDate
 import io.chrisdavenport.cats.effect.time.JavaTime
-import scodec._
-import scodec.codecs._
 
 /**
  * Cache Items are what we place in the cache, this is exposed
@@ -24,13 +22,6 @@ object CacheItem {
     JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow.map(date => 
       new CacheItem(date, expires, response)
     )
-
-  private[http4s] val httpDateCodec: Codec[HttpDate] = 
-    int64.exmapc(i => Attempt.fromEither(HttpDate.fromEpochSecond(i).leftMap(e => Err(e.details))))(
-      date => Attempt.successful(date.epochSecond)
-    )
-
-  val codec: Codec[CacheItem] = (httpDateCodec :: optional(bool, httpDateCodec) :: CachedResponse.codec).as[CacheItem]
 
   final case class Age(val deltaSeconds: Long) extends AnyVal
   object Age {

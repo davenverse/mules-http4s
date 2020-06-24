@@ -4,9 +4,10 @@ val catsV = "2.1.0"
 val catsEffectV = "2.1.1"
 val fs2V = "2.2.2"
 val scodecV = "1.11.7"
-val http4sV = "0.21.0"
+val scodecCatsV = "1.0.0"
+val http4sV = "0.21.4"
 val circeV = "0.13.0"
-val specs2V = "4.8.3"
+val specs2V = "4.10.0"
 
 val mulesV = "0.4.0"
 
@@ -17,12 +18,23 @@ val betterMonadicForV = "0.3.1"
 lazy val `mules-http4s` = project.in(file("."))
   .disablePlugins(MimaPlugin)
   .enablePlugins(NoPublishPlugin)
-  .aggregate(core)
+  .aggregate(core, scodec)
 
 lazy val core = project.in(file("core"))
   .settings(commonSettings)
   .settings(
     name := "mules-http4s"
+  )
+
+lazy val scodec = project.in(file("scodec"))
+  .settings(commonSettings)
+  .dependsOn(core)
+  .settings(
+    name := "mules-http4s-scodec",
+    libraryDependencies ++= Seq(
+    "org.scodec"                  %% "scodec-core"                % scodecV,
+    "org.scodec"                  %% "scodec-cats"                % scodecCatsV,
+    )
   )
 
 lazy val site = project.in(file("site"))
@@ -89,11 +101,8 @@ lazy val commonSettings = Seq(
     "org.typelevel"               %% "cats-core"                  % catsV,
     "org.typelevel"               %% "cats-effect"                % catsEffectV,
     
-
     "co.fs2"                      %% "fs2-core"                   % fs2V,
     "co.fs2"                      %% "fs2-io"                     % fs2V,
-    "org.scodec"                  %% "scodec-core"                % scodecV,
-    "org.scodec"                  %% "scodec-cats"                % "1.0.0",
 
     "org.http4s"                  %% "http4s-server"              % http4sV,
     "org.http4s"                  %% "http4s-client"              % http4sV,

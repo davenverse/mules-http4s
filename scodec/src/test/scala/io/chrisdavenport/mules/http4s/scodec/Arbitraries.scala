@@ -1,7 +1,8 @@
-package io.chrisdavenport.mules.http4s
+package io.chrisdavenport.mules.http4s.scodec
 
+import io.chrisdavenport.mules.http4s._
 import org.scalacheck._
-import scodec.bits.ByteVector
+import _root_.scodec.bits.ByteVector
 import org.http4s._
 import org.http4s.util.CaseInsensitiveString
 import java.time._
