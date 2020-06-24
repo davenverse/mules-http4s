@@ -3,6 +3,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 val catsV = "2.1.0"
 val catsEffectV = "2.1.1"
 val fs2V = "2.2.2"
+val scodecV = "1.11.7"
 val http4sV = "0.21.0"
 val circeV = "0.13.0"
 val specs2V = "4.8.3"
@@ -87,9 +88,12 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel"               %% "cats-core"                  % catsV,
     "org.typelevel"               %% "cats-effect"                % catsEffectV,
+    
 
     "co.fs2"                      %% "fs2-core"                   % fs2V,
     "co.fs2"                      %% "fs2-io"                     % fs2V,
+    "org.scodec"                  %% "scodec-core"                % scodecV,
+    "org.scodec"                  %% "scodec-cats"                % "1.0.0",
 
     "org.http4s"                  %% "http4s-server"              % http4sV,
     "org.http4s"                  %% "http4s-client"              % http4sV,

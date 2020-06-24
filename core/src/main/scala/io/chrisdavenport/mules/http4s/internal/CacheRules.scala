@@ -55,8 +55,8 @@ private[http4s] object CacheRules {
         // accept stale data, then age is not ok.
         item.expires.map(expiresAt => expiresAt >= now).getOrElse(true)
       case Some(`Cache-Control`(values)) => 
-        val age = CacheItem.age(item.created, now)
-        val lifetime = CacheItem.cacheLifetime(item.expires, now)
+        val age = CacheItem.Age.of(item.created, now)
+        val lifetime = CacheItem.CacheLifetime.of(item.expires, now)
 
         val maxAgeMet: Boolean = values.toList
           .collectFirst{ case c@CacheDirective.`max-age`(_) => c }
