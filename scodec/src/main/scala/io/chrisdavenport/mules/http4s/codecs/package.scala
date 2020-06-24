@@ -6,13 +6,13 @@ import _root_.scodec._
 import _root_.scodec.codecs._
 import org.http4s._
 
-package object scodec {
-  private[scodec] val statusCodec : Codec[Status] = int16.exmap(
+package object codecs {
+  private[codecs] val statusCodec : Codec[Status] = int16.exmap(
     i => Attempt.fromEither(Status.fromInt(i).leftMap(p => Err.apply(p.details))),
     s => Attempt.successful(s.code)
   )
 
-  private[scodec] val httpVersionCodec: Codec[HttpVersion] = {
+  private[codecs] val httpVersionCodec: Codec[HttpVersion] = {
     def decode(major: Int, minor: Int): Attempt[HttpVersion] = 
       Attempt.fromEither(HttpVersion.fromVersion(major, minor).leftMap(p => Err.apply(p.message)))
     (int8 ~ int8).exmap(
@@ -21,7 +21,7 @@ package object scodec {
     )
   }
 
-  private[scodec] val headersCodec : Codec[Headers] = {
+  private[codecs] val headersCodec : Codec[Headers] = {
     cstring.exmapc{
       s => 
         if (s.isEmpty()) 
@@ -42,7 +42,7 @@ package object scodec {
     }
   }
 
-  private[scodec] val httpDateCodec: Codec[HttpDate] = 
+  private[codecs] val httpDateCodec: Codec[HttpDate] = 
     int64.exmapc(i => Attempt.fromEither(HttpDate.fromEpochSecond(i).leftMap(e => Err(e.details))))(
       date => Attempt.successful(date.epochSecond)
     )

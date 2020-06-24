@@ -1,4 +1,4 @@
-package io.chrisdavenport.mules.http4s.scodec
+package io.chrisdavenport.mules.http4s.codecs
 
 import io.chrisdavenport.mules.http4s._
 import Arbitraries._
