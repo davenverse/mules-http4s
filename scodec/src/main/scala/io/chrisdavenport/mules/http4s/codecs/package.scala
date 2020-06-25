@@ -23,7 +23,7 @@ package object codecs {
   }
 
   private[codecs] val headersCodec : Codec[Headers] = {
-    cstring.exmapc{
+    string32(StandardCharsets.UTF_8).exmapc{
       s => 
         if (s.isEmpty()) 
           Attempt.successful(Headers.empty)
@@ -48,12 +48,11 @@ package object codecs {
       date => Attempt.successful(date.epochSecond)
     )
 
-  private[codecs] val method: Codec[Method] = cstring.exmapc(s => 
+  private[codecs] val method: Codec[Method] = string32(StandardCharsets.UTF_8).exmapc(s => 
       Attempt.fromEither(Method.fromString(s).leftMap(p => Err.apply(p.details)))
     )(m => Attempt.successful(m.name))
 
-  private[codecs] val uri : Codec[Uri] = variableSizeBytesLong(int64, string(StandardCharsets.UTF_8))
-      .withToString(s"string64(${StandardCharsets.UTF_8.displayName()})")
+  private[codecs] val uri : Codec[Uri] = string32(StandardCharsets.UTF_8) 
       .exmapc(
       s => Attempt.fromEither(Uri.fromString(s).leftMap(p => Err.apply(p.details)))
   )(uri =>  Attempt.successful(uri.renderString))
@@ -61,7 +60,7 @@ package object codecs {
   val keyTupleCodec : Codec[(Method, Uri)] = method ~ uri
 
   val cachedResponseCodec : Codec[CachedResponse] = 
-    (statusCodec :: httpVersionCodec :: headersCodec :: bytes).as[CachedResponse]
+    (statusCodec :: httpVersionCodec :: headersCodec :: variableSizeBytesLong(int64, bytes)).as[CachedResponse]
 
   val cacheItemCodec: Codec[CacheItem] = (httpDateCodec :: optional(bool, httpDateCodec) :: cachedResponseCodec).as[CacheItem]
 }
