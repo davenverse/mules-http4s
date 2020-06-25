@@ -34,7 +34,7 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
   "Cache Key Codec" should {
 
     "round-trip a known uri" in {
-      val test = (Method.GET, uri"https://www.google.com")
+      val test = (Method.GET, uri"https://chrisdavenport.io:4553/foo/bar/baz?implicit=yes")
       val encoded = keyTupleCodec.encode(test)
       val decoded = encoded.flatMap(bv => keyTupleCodec.decode(bv))
       decoded.toEither.map(_.value) must beRight.like{
