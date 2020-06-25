@@ -5,6 +5,7 @@ import _root_.scodec.interop.cats._
 import _root_.scodec._
 import _root_.scodec.codecs._
 import org.http4s._
+import java.nio.charset.StandardCharsets
 
 package object codecs {
   private[codecs] val statusCodec : Codec[Status] = int16.exmap(
@@ -46,6 +47,18 @@ package object codecs {
     int64.exmapc(i => Attempt.fromEither(HttpDate.fromEpochSecond(i).leftMap(e => Err(e.details))))(
       date => Attempt.successful(date.epochSecond)
     )
+
+  private[codecs] val method: Codec[Method] = cstring.exmapc(s => 
+      Attempt.fromEither(Method.fromString(s).leftMap(p => Err.apply(p.details)))
+    )(m => Attempt.successful(m.name))
+
+  private[codecs] val uri : Codec[Uri] = variableSizeBytesLong(int64, string(StandardCharsets.UTF_8))
+      .withToString(s"string64(${StandardCharsets.UTF_8.displayName()})")
+      .exmapc(
+      s => Attempt.fromEither(Uri.fromString(s).leftMap(p => Err.apply(p.details)))
+  )(uri =>  Attempt.successful(uri.renderString))
+
+  val keyTupleCodec : Codec[(Method, Uri)] = method ~ uri
 
   val cachedResponseCodec : Codec[CachedResponse] = 
     (statusCodec :: httpVersionCodec :: headersCodec :: bytes).as[CachedResponse]
