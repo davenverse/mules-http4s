@@ -42,20 +42,18 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
       }
     }
 
-    "round trip succesfully" in prop { cacheKey: (Method, Uri) => 
+    "round trip succesfully" in prop { cacheKey: (Method, Uri) => Uri.fromString(cacheKey._2.renderString).isRight ==> {
       // Gave up after only 45 passed tests. 501 tests were discarded.
       // Uri.fromString(cacheKey._2.renderString).map(_ == cacheKey._2).getOrElse(false)  ==> {
       val encoded = keyTupleCodec.encode(cacheKey)
       val decoded = encoded.flatMap(bv => keyTupleCodec.decode(bv))
 
       val checkTraversal = Uri.fromString(cacheKey._2.renderString).map(_ == cacheKey._2).getOrElse(false)
-      if (checkTraversal) {
-        decoded.toEither.map(_.value) must beRight.like{
-          case a  => (a._1 must_=== cacheKey._1) and (a._2 must_=== cacheKey._2)
-        }
-      } else {
-        ok
+      
+      decoded.toEither.map(_.value) must beRight.like{
+        case a  if (checkTraversal) => (a._1 must_=== cacheKey._1) and (a._2 must_=== cacheKey._2)
+        case a => (a._1 must_=== cacheKey._1)
       }
-    }
+    }}
   }
 }
