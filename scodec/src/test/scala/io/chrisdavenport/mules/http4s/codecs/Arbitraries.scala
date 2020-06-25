@@ -268,4 +268,4 @@ trait Arbitraries {
 
 }
 
-// object Arbitraries extends Arbitraries
+object Arbitraries extends Arbitraries

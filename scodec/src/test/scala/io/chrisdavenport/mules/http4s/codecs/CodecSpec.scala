@@ -3,9 +3,9 @@ package io.chrisdavenport.mules.http4s.codecs
 import io.chrisdavenport.mules.http4s._
 import org.http4s.{Method, Uri}
 import org.http4s.implicits._
-// import Arbitraries._
+import Arbitraries._
 
-class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCheck with Arbitraries {
+class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCheck {
 
   "CachedResponse Codec" should {
     "round trip succesfully" in prop{ cached: CachedResponse =>
