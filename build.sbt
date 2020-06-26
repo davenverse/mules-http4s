@@ -108,7 +108,7 @@ lazy val commonSettings = Seq(
     "org.http4s"                  %% "http4s-client"              % http4sV,
 
     "io.chrisdavenport"            %% "mules"                      % mulesV,
-    "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.0",
+    "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.2",
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
     "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.0"       % Test,
