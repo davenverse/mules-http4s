@@ -25,9 +25,9 @@
 <span class="k">import</span> <span class="nn">org.http4s.client.asynchttpclient._</span>
 
 <span class="k">implicit</span> <span class="k">val</span> <span class="nv">T</span> <span class="k">=</span> <span class="nv">IO</span><span class="o">.</span><span class="py">timer</span><span class="o">(</span><span class="nv">scala</span><span class="o">.</span><span class="py">concurrent</span><span class="o">.</span><span class="py">ExecutionContext</span><span class="o">.</span><span class="py">global</span><span class="o">)</span>
-<span class="c1">// T: Timer[IO] = cats.effect.internals.IOTimer@76f55d44</span>
+<span class="c1">// T: Timer[IO] = cats.effect.internals.IOTimer@3a9213e3</span>
 <span class="k">implicit</span> <span class="k">val</span> <span class="nv">CS</span> <span class="k">=</span> <span class="nv">IO</span><span class="o">.</span><span class="py">contextShift</span><span class="o">(</span><span class="nv">scala</span><span class="o">.</span><span class="py">concurrent</span><span class="o">.</span><span class="py">ExecutionContext</span><span class="o">.</span><span class="py">global</span><span class="o">)</span>
-<span class="c1">// CS: ContextShift[IO] = cats.effect.internals.IOContextShift@20ea8097</span>
+<span class="c1">// CS: ContextShift[IO] = cats.effect.internals.IOContextShift@65297d44</span>
 
 <span class="k">def</span> <span class="nf">testMiddleware</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Bracket</span><span class="o">[</span><span class="kt">*</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>, <span class="kt">Throwable</span><span class="o">]](</span><span class="n">c</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">],</span> <span class="n">ref</span><span class="k">:</span> <span class="kt">Ref</span><span class="o">[</span><span class="kt">F</span>, <span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
   <span class="nc">Client</span><span class="o">{</span><span class="n">req</span> <span class="k">=&gt;</span> <span class="nv">c</span><span class="o">.</span><span class="py">run</span><span class="o">(</span><span class="n">req</span><span class="o">).</span><span class="py">evalMap</span><span class="o">(</span><span class="n">resp</span> <span class="k">=&gt;</span> <span class="nv">ref</span><span class="o">.</span><span class="py">update</span><span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="mi">1</span><span class="o">).</span><span class="py">as</span><span class="o">(</span><span class="n">resp</span><span class="o">))}</span>
@@ -35,18 +35,24 @@
 
 <span class="k">val</span> <span class="nv">jQueryRequest</span> <span class="k">=</span> <span class="nc">Request</span><span class="o">[</span><span class="kt">IO</span><span class="o">](</span><span class="nv">Method</span><span class="o">.</span><span class="py">GET</span><span class="o">,</span> <span class="n">uri</span><span class="s">"https://code.jquery.com/jquery-3.4.1.slim.min.js"</span><span class="o">)</span>
 <span class="c1">// jQueryRequest: Request[IO] = (</span>
-<span class="c1">//   Method("GET"),</span>
-<span class="c1">//   Uri(</span>
-<span class="c1">//     Some(Scheme(https)),</span>
-<span class="c1">//     Some(Authority(None, RegName(code.jquery.com), None)),</span>
-<span class="c1">//     "/jquery-3.4.1.slim.min.js",</span>
-<span class="c1">//     ,</span>
-<span class="c1">//     None</span>
+<span class="c1">//    = Method(name = "GET"),</span>
+<span class="c1">//    = Uri(</span>
+<span class="c1">//     scheme = Some(value = Scheme(https)),</span>
+<span class="c1">//     authority = Some(</span>
+<span class="c1">//       value = Authority(</span>
+<span class="c1">//         userInfo = None,</span>
+<span class="c1">//         host = RegName(host = code.jquery.com),</span>
+<span class="c1">//         port = None</span>
+<span class="c1">//       )</span>
+<span class="c1">//     ),</span>
+<span class="c1">//     path = "/jquery-3.4.1.slim.min.js",</span>
+<span class="c1">//     query = ,</span>
+<span class="c1">//     fragment = None</span>
 <span class="c1">//   ),</span>
-<span class="c1">//   HttpVersion(1, 1),</span>
-<span class="c1">//   Headers(),</span>
-<span class="c1">//   Stream(..),</span>
-<span class="c1">//   io.chrisdavenport.vault.Vault@598a4fa7</span>
+<span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
+<span class="c1">//    = Headers(),</span>
+<span class="c1">//    = Stream(..),</span>
+<span class="c1">//    = io.chrisdavenport.vault.Vault@3f366717</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -62,8 +68,8 @@
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
 <span class="c1">// exampleCached: IO[(Int, Int)] = Async(</span>
-<span class="c1">//   cats.effect.internals.IOBracket$$$Lambda$8226/0x00000001025ef840@4f33e764,</span>
-<span class="c1">//   false</span>
+<span class="c1">//   k = cats.effect.internals.IOBracket$$$Lambda$8513/0x0000000102772840@115ac038,</span>
+<span class="c1">//   trampolineAfter = false</span>
 <span class="c1">// )</span>
 
 <span class="nv">exampleCached</span><span class="o">.</span><span class="py">unsafeRunSync</span>
@@ -71,18 +77,24 @@
 
 <span class="k">val</span> <span class="nv">dadJokesRequest</span> <span class="k">=</span> <span class="nc">Request</span><span class="o">[</span><span class="kt">IO</span><span class="o">](</span><span class="nv">Method</span><span class="o">.</span><span class="py">GET</span><span class="o">,</span> <span class="n">uri</span><span class="s">"https://icanhazdadjoke.com/"</span><span class="o">)</span>
 <span class="c1">// dadJokesRequest: Request[IO] = (</span>
-<span class="c1">//   Method("GET"),</span>
-<span class="c1">//   Uri(</span>
-<span class="c1">//     Some(Scheme(https)),</span>
-<span class="c1">//     Some(Authority(None, RegName(icanhazdadjoke.com), None)),</span>
-<span class="c1">//     "/",</span>
-<span class="c1">//     ,</span>
-<span class="c1">//     None</span>
+<span class="c1">//    = Method(name = "GET"),</span>
+<span class="c1">//    = Uri(</span>
+<span class="c1">//     scheme = Some(value = Scheme(https)),</span>
+<span class="c1">//     authority = Some(</span>
+<span class="c1">//       value = Authority(</span>
+<span class="c1">//         userInfo = None,</span>
+<span class="c1">//         host = RegName(host = icanhazdadjoke.com),</span>
+<span class="c1">//         port = None</span>
+<span class="c1">//       )</span>
+<span class="c1">//     ),</span>
+<span class="c1">//     path = "/",</span>
+<span class="c1">//     query = ,</span>
+<span class="c1">//     fragment = None</span>
 <span class="c1">//   ),</span>
-<span class="c1">//   HttpVersion(1, 1),</span>
-<span class="c1">//   Headers(),</span>
-<span class="c1">//   Stream(..),</span>
-<span class="c1">//   io.chrisdavenport.vault.Vault@95454f8</span>
+<span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
+<span class="c1">//    = Headers(),</span>
+<span class="c1">//    = Stream(..),</span>
+<span class="c1">//    = io.chrisdavenport.vault.Vault@53aba00b</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleUnCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -98,8 +110,8 @@
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
 <span class="c1">// exampleUnCached: IO[(Int, Int)] = Async(</span>
-<span class="c1">//   cats.effect.internals.IOBracket$$$Lambda$8226/0x00000001025ef840@79dcfd58,</span>
-<span class="c1">//   false</span>
+<span class="c1">//   k = cats.effect.internals.IOBracket$$$Lambda$8513/0x0000000102772840@42897f5c,</span>
+<span class="c1">//   trampolineAfter = false</span>
 <span class="c1">// )</span>
 
 <span class="nv">exampleUnCached</span><span class="o">.</span><span class="py">unsafeRunSync</span>
