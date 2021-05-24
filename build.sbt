@@ -112,7 +112,7 @@ lazy val commonSettings = Seq(
     "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
     "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
     "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.0"       % Test,
-    "com.codecommit"              %% "cats-effect-testing-specs2" % "0.3.0"       %  Test,
+    "com.codecommit"              %% "cats-effect-testing-specs2" % "0.5.4"       %  Test,
     "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
   )
 )
