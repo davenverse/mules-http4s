@@ -5,7 +5,7 @@ val catsEffectV = "2.1.4"
 val fs2V = "2.2.2"
 val scodecV = "1.11.7"
 val scodecCatsV = "1.0.0"
-val http4sV = "0.21.6"
+val http4sV = "0.21.24"
 val circeV = "0.13.0"
 val specs2V = "4.10.2"
 
