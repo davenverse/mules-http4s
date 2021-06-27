@@ -1,5 +1,8 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
+val Scala212 = "2.12.10"
+val Scala213 = "2.13.1"
+
 val catsV = "2.1.0"
 val catsEffectV = "2.1.4"
 val fs2V = "2.2.2"
@@ -44,7 +47,7 @@ lazy val site = project.in(file("site"))
   .enablePlugins(NoPublishPlugin)
   .settings(commonSettings)
   .dependsOn(core)
-  .settings{
+  .settings {
     import microsites._
     Seq(
       micrositeName := "mules-http4s",
@@ -79,8 +82,8 @@ lazy val site = project.in(file("site"))
       micrositePushSiteWith := GitHub4s,
       micrositeGithubToken := sys.env.get("GITHUB_TOKEN"),
       micrositeExtraMdFiles := Map(
-          file("CODE_OF_CONDUCT.md")  -> ExtraMdFileConfig("code-of-conduct.md",   "page", Map("title" -> "code of conduct",   "section" -> "code of conduct",   "position" -> "100")),
-          file("LICENSE")             -> ExtraMdFileConfig("license.md",   "page", Map("title" -> "license",   "section" -> "license",   "position" -> "101"))
+        file("CODE_OF_CONDUCT.md") -> ExtraMdFileConfig("code-of-conduct.md", "page", Map("title" -> "code of conduct", "section" -> "code of conduct", "position" -> "100")),
+        file("LICENSE")            -> ExtraMdFileConfig("license.md", "page", Map("title" -> "license", "section" -> "license", "position" -> "101"))
       ),
       libraryDependencies ++= Seq(
         "io.chrisdavenport" %% "mules-caffeine" % mulesV,
@@ -91,8 +94,6 @@ lazy val site = project.in(file("site"))
 
 // General Settings
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.1",
-  crossScalaVersions := Seq(scalaVersion.value, "2.12.10"),
 
   addCompilerPlugin("org.typelevel" %% "kind-projector" % kindProjectorV cross CrossVersion.full),
   addCompilerPlugin("com.olegpy"    %% "better-monadic-for" % betterMonadicForV),
@@ -119,6 +120,9 @@ lazy val commonSettings = Seq(
 
 // General Settings
 inThisBuild(List(
+  crossScalaVersions := Seq(Scala212, Scala213),
+  scalaVersion := crossScalaVersions.value.last,
+
   organization := "io.chrisdavenport",
   developers := List(
     Developer("ChristopherDavenport", "Christopher Davenport", "chris@christopherdavenport.tech", url("https://github.com/ChristopherDavenport"))
@@ -127,10 +131,10 @@ inThisBuild(List(
   homepage := Some(url("https://github.com/ChristopherDavenport/mules-http4s")),
   licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
 
-  pomIncludeRepository := { _ => false},
+  pomIncludeRepository := { _ => false },
   scalacOptions in (Compile, doc) ++= Seq(
-      "-groups",
-      "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
-      "-doc-source-url", "https://github.com/ChristopherDavenport/mules-http4s/blob/v" + version.value + "€{FILE_PATH}.scala"
+    "-groups",
+    "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
+    "-doc-source-url", "https://github.com/ChristopherDavenport/mules-http4s/blob/v" + version.value + "€{FILE_PATH}.scala"
   )
 ))

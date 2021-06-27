@@ -9,3 +9,5 @@ addSbtPlugin("io.chrisdavenport" % "sbt-no-publish" % "0.1.0")
 
 addSbtPlugin("com.47deg" % "sbt-microsites" % "1.0.2")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.2.4")
+
+addSbtPlugin("com.codecommit" % "sbt-github-actions" % "0.12.0")
