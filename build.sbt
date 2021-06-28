@@ -71,7 +71,7 @@ lazy val site = project.in(file("site"))
         "white-color" -> "#FFFFFF"
       ),
       micrositeCompilingDocsTool := WithMdoc,
-      scalacOptions in Tut --= Seq(
+      Tut / scalacOptions --= Seq(
         "-Xfatal-warnings",
         "-Ywarn-unused-import",
         "-Ywarn-numeric-widen",
@@ -115,26 +115,29 @@ lazy val commonSettings = Seq(
     "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.0"       % Test,
     "com.codecommit"              %% "cats-effect-testing-specs2" % "0.3.0"       %  Test,
     "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
-  )
+  ),
+
+  Compile / doc / scalacOptions ++= Seq(
+    "-groups",
+    "-sourcepath", (LocalRootProject / baseDirectory).value.getAbsolutePath,
+    "-doc-source-url", "https://github.com/ChristopherDavenport/mules-http4s/blob/v" + version.value + "€{FILE_PATH}.scala"
+  ),
+
+  pomIncludeRepository := { _ => false }
 )
 
 // General Settings
-inThisBuild(List(
-  crossScalaVersions := Seq(Scala212, Scala213),
-  scalaVersion := crossScalaVersions.value.last,
+ThisBuild / crossScalaVersions := Seq(Scala212, Scala213)
+ThisBuild / scalaVersion := crossScalaVersions.value.last
 
-  organization := "io.chrisdavenport",
-  developers := List(
-    Developer("ChristopherDavenport", "Christopher Davenport", "chris@christopherdavenport.tech", url("https://github.com/ChristopherDavenport"))
-  ),
+ThisBuild / organization := "io.chrisdavenport"
+ThisBuild / developers := List(
+  Developer(
+    "ChristopherDavenport", "Christopher Davenport", "chris@christopherdavenport.tech",
+    url("https://github.com/ChristopherDavenport"))
+)
 
-  homepage := Some(url("https://github.com/ChristopherDavenport/mules-http4s")),
-  licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+ThisBuild / homepage := Some(url("https://github.com/ChristopherDavenport/mules-http4s"))
+ThisBuild / licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
-  pomIncludeRepository := { _ => false },
-  scalacOptions in (Compile, doc) ++= Seq(
-    "-groups",
-    "-sourcepath", (baseDirectory in LocalRootProject).value.getAbsolutePath,
-    "-doc-source-url", "https://github.com/ChristopherDavenport/mules-http4s/blob/v" + version.value + "€{FILE_PATH}.scala"
-  )
-))
+ThisBuild / githubWorkflowArtifactUpload := false
