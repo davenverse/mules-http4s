@@ -139,6 +139,8 @@ ThisBuild / licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
 ThisBuild / githubWorkflowArtifactUpload := false
 
+ThisBuild / githubWorkflowTargetTags ++= Seq("v*")
+
 val Scala213Cond = s"matrix.scala == '$Scala213'"
 
 def rubySetupSteps(cond: Option[String]) = Seq(
