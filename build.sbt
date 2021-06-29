@@ -1,5 +1,3 @@
-import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
-
 val Scala212 = "2.12.10"
 val Scala213 = "2.13.1"
 
@@ -48,7 +46,7 @@ lazy val site = project.in(file("site"))
   .settings(commonSettings)
   .dependsOn(core)
   .settings {
-    import microsites._
+    import microsites.ExtraMdFileConfig
     Seq(
       micrositeName := "mules-http4s",
       micrositeDescription := "Http4s Caching Implementation",
@@ -70,8 +68,7 @@ lazy val site = project.in(file("site"))
         "gray-lighter" -> "#F4F3F4",
         "white-color" -> "#FFFFFF"
       ),
-      micrositeCompilingDocsTool := WithMdoc,
-      Tut / scalacOptions --= Seq(
+      scalacOptions --= Seq(
         "-Xfatal-warnings",
         "-Ywarn-unused-import",
         "-Ywarn-numeric-widen",
@@ -141,3 +138,27 @@ ThisBuild / homepage := Some(url("https://github.com/ChristopherDavenport/mules-
 ThisBuild / licenses += ("MIT", url("http://opensource.org/licenses/MIT"))
 
 ThisBuild / githubWorkflowArtifactUpload := false
+
+val Scala213Cond = s"matrix.scala == '$Scala213'"
+
+def rubySetupSteps(cond: Option[String]) = Seq(
+  WorkflowStep.Use(
+    UseRef.Public("ruby", "setup-ruby", "v1"),
+    name = Some("Setup Ruby"),
+    params = Map("ruby-version" -> "2.6.0"),
+    cond = cond),
+
+  WorkflowStep.Run(
+    List(
+      "gem install saas",
+      "gem install jekyll -v 3.2.1"),
+    name = Some("Install microsite dependencies"),
+    cond = cond))
+
+ThisBuild / githubWorkflowBuildPreamble ++=
+  rubySetupSteps(Some(Scala213Cond))
+
+ThisBuild / githubWorkflowBuild := Seq(
+  WorkflowStep.Sbt(List("test", "mimaReportBinaryIssues"), name = Some("Compile and test project code")),
+  WorkflowStep.Sbt(List("site/makeMicrosite"), cond = Some(Scala213Cond), name = Some("Make microsite"))
+)
