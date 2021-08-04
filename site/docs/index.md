@@ -23,7 +23,6 @@ libraryDependencies ++= Seq(
 import cats._
 import cats.implicits._
 import cats.effect._
-import cats.effect.concurrent.Ref
 import io.chrisdavenport.mules._
 import io.chrisdavenport.mules.caffeine._
 import io.chrisdavenport.mules.http4s._
@@ -32,10 +31,7 @@ import org.http4s.implicits._
 import org.http4s.client.Client
 import org.http4s.asynchttpclient.client._
 
-implicit val T = IO.timer(scala.concurrent.ExecutionContext.global)
-implicit val CS = IO.contextShift(scala.concurrent.ExecutionContext.global)
-
-def testMiddleware[F[_]: Bracket[*[_], Throwable]](c: Client[F], ref: Ref[F, Int]): Client[F] = {
+def testMiddleware[F[_]: Concurrent](c: Client[F], ref: Ref[F, Int]): Client[F] = {
   Client{req => c.run(req).evalMap(resp => ref.update(_ + 1).as(resp))}
 }
 
@@ -53,6 +49,8 @@ val exampleCached = AsyncHttpClient.resource[IO]().use{ client =>
     count2 <- counter.get
   } yield (count1, count2)
 }
+
+import cats.effect.unsafe.implicits.global // DON'T DO THIS IN PROD
 
 exampleCached.unsafeRunSync()
 
