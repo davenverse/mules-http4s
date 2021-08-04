@@ -4,7 +4,7 @@ ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
 
 val catsV = "2.6.1"
 val catsEffectV = "2.5.2"
-val fs2V = "2.5.9"
+val fs2V = "3.0.6"
 val scodecV = "1.11.8"
 val scodecCatsV = "1.1.0"
 val http4sV = "0.22.1"
