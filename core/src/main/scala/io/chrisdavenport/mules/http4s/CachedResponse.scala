@@ -26,7 +26,7 @@ final case class CachedResponse(
 
 object CachedResponse {
 
-  def fromResponse[F[_], G[_]: Functor](response: Response[F])(implicit compiler: Stream.Compiler[F,G]): G[CachedResponse] = {
+  def fromResponse[F[_], G[_]: Functor](response: Response[F])(implicit compiler: Compiler[F,G]): G[CachedResponse] = {
     response.body.compile.to(ByteVector).map{bv =>
       new CachedResponse(
         response.status,

@@ -3,8 +3,7 @@ package io.chrisdavenport.mules.http4s
 import cats.implicits._
 import cats.data._
 import cats.effect._
-import cats.effect.concurrent._
-import cats.effect.testing.specs2.CatsIO
+import cats.effect.testing.specs2.CatsEffect
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.headers._
@@ -12,7 +11,7 @@ import org.http4s.headers._
 import scala.concurrent.duration._
 import io.chrisdavenport.cats.effect.time.JavaTime
 
-class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
+class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsEffect {
   "Caching Responses" should {
     "never cache a response that should never be cached" in {
       for {
@@ -185,7 +184,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
         firstResp <- newApp.run(request)
         first <- firstResp.as[String]
 
-        _ <- Timer[IO].sleep(2.seconds)
+        _ <- Temporal[IO].sleep(2.seconds)
 
         secondResp <- newApp.run(request)
         second <- secondResp.as[String]

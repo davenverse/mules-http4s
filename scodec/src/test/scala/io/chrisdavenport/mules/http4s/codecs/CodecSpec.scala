@@ -4,6 +4,7 @@ import io.chrisdavenport.mules.http4s._
 import org.http4s._
 import org.http4s.implicits._
 import Arbitraries._
+import cats.effect.unsafe.implicits.global
 class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCheck {
 
   "CachedResponse Codec" should {
