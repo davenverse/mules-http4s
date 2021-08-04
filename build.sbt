@@ -9,7 +9,7 @@ val scodecV = "1.11.8"
 val scodecCatsV = "1.1.0"
 val http4sV = "0.22.1"
 val circeV = "0.14.1"
-val specs2V = "4.12.3"
+val specs2V = "4.12.4-js-ec"
 
 val mulesV = "0.4.0"
 
