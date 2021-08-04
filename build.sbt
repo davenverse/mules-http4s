@@ -3,18 +3,14 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
 
 val catsV = "2.6.1"
-val catsEffectV = "2.5.2"
-val fs2V = "2.5.9"
-val scodecV = "1.11.8"
+val catsEffectV = "3.2.1"
+val fs2V = "3.0.6"
 val scodecCatsV = "1.1.0"
-val http4sV = "0.22.1"
+val http4sV = "0.23.0"
 val circeV = "0.14.1"
 val specs2V = "4.12.3"
 
-val mulesV = "0.4.0"
-
-val kindProjectorV = "0.11.0"
-val betterMonadicForV = "0.3.1"
+val mulesV = "0.5.0-M1"
 
 // Projects
 lazy val `mules-http4s` = project.in(file("."))
@@ -36,8 +32,8 @@ lazy val core = project.in(file("core"))
       "org.http4s"                  %% "http4s-client"              % http4sV,
 
       "io.chrisdavenport"            %% "mules"                      % mulesV,
-      "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.2",
-      "com.comcast"            %% "ip4s-test-kit"             % "2.0.3"
+      "io.chrisdavenport"            %% "cats-effect-time"           % "0.2.0",
+      "com.comcast"            %% "ip4s-test-kit"             % "3.0.3"
     ) ++ testingDeps
   )
 
@@ -46,7 +42,7 @@ lazy val scodec = project.in(file("scodec"))
   .settings(
     name := "mules-http4s-scodec",
     libraryDependencies ++= Seq(
-      "org.scodec"                  %% "scodec-core"                % scodecV,
+      "org.scodec"             %% "scodec-core"      % (if (isDotty.value) "2.0.0" else "1.11.8"),
       "org.scodec"                  %% "scodec-cats"                % scodecCatsV,
     ) ++ testingDeps
   )
@@ -70,6 +66,6 @@ lazy val testingDeps = Seq(
   "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
   "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
   "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.1"       % Test,
-  "com.codecommit"              %% "cats-effect-testing-specs2" % "0.4.0"       %  Test,
+  "org.typelevel"              %% "cats-effect-testing-specs2" % "1.2.0"       %  Test,
   "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
 )

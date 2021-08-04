@@ -5,18 +5,18 @@ import org.http4s._
 import io.chrisdavenport.mules._
 import io.chrisdavenport.cats.effect.time._
 import cats._
-import cats.implicits._
+import cats.syntax.all._
 import cats.data._
-import fs2.Stream
+import cats.effect._
 import org.http4s.Header.ToRaw.modelledHeadersToRaw
 
-private[http4s] class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] private[http4s] (cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType)(implicit Compiler: Stream.Compiler[F,F]){
+private[http4s] class Caching[F[_]: Concurrent: JavaTime] private[http4s] (cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType){
 
   def request[G[_]: FlatMap](app: Kleisli[G, Request[F], Response[F]], fk: F ~> G)(req: Request[F]): G[Response[F]] = {
     if (CacheRules.requestCanUseCached(req)) {
       for {
         cachedValue <- fk(cache.lookup((req.method, req.uri)))
-        now <- fk(JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow)
+        now <- fk(JavaTime[F].getInstant.map(HttpDate.fromInstant(_)).rethrow)
         out <- cachedValue match {
           case None => 
             if (CacheRules.onlyIfCached(req)) fk(Response[F](Status.GatewayTimeout).pure[F])
