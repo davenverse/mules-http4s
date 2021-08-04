@@ -25,9 +25,9 @@
 <span class="k">import</span> <span class="nn">org.http4s.asynchttpclient.client._</span>
 
 <span class="k">implicit</span> <span class="k">val</span> <span class="nv">T</span> <span class="k">=</span> <span class="nv">IO</span><span class="o">.</span><span class="py">timer</span><span class="o">(</span><span class="nv">scala</span><span class="o">.</span><span class="py">concurrent</span><span class="o">.</span><span class="py">ExecutionContext</span><span class="o">.</span><span class="py">global</span><span class="o">)</span>
-<span class="c1">// T: Timer[IO] = cats.effect.internals.IOTimer@68755a0f</span>
+<span class="c1">// T: Timer[IO] = cats.effect.internals.IOTimer@784b6631</span>
 <span class="k">implicit</span> <span class="k">val</span> <span class="nv">CS</span> <span class="k">=</span> <span class="nv">IO</span><span class="o">.</span><span class="py">contextShift</span><span class="o">(</span><span class="nv">scala</span><span class="o">.</span><span class="py">concurrent</span><span class="o">.</span><span class="py">ExecutionContext</span><span class="o">.</span><span class="py">global</span><span class="o">)</span>
-<span class="c1">// CS: ContextShift[IO] = cats.effect.internals.IOContextShift@5f9e1193</span>
+<span class="c1">// CS: ContextShift[IO] = cats.effect.internals.IOContextShift@156b2b50</span>
 
 <span class="k">def</span> <span class="nf">testMiddleware</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Bracket</span><span class="o">[</span><span class="kt">*</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>, <span class="kt">Throwable</span><span class="o">]](</span><span class="n">c</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">],</span> <span class="n">ref</span><span class="k">:</span> <span class="kt">Ref</span><span class="o">[</span><span class="kt">F</span>, <span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
   <span class="nc">Client</span><span class="o">{</span><span class="n">req</span> <span class="k">=&gt;</span> <span class="nv">c</span><span class="o">.</span><span class="py">run</span><span class="o">(</span><span class="n">req</span><span class="o">).</span><span class="py">evalMap</span><span class="o">(</span><span class="n">resp</span> <span class="k">=&gt;</span> <span class="nv">ref</span><span class="o">.</span><span class="py">update</span><span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="mi">1</span><span class="o">).</span><span class="py">as</span><span class="o">(</span><span class="n">resp</span><span class="o">))}</span>
@@ -52,7 +52,7 @@
 <span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
 <span class="c1">//    = Headers(),</span>
 <span class="c1">//    = Stream(..),</span>
-<span class="c1">//    = org.typelevel.vault.Vault@1441bb39</span>
+<span class="c1">//    = org.typelevel.vault.Vault@19a9722c</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -68,7 +68,7 @@
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
 <span class="c1">// exampleCached: IO[(Int, Int)] = Async(</span>
-<span class="c1">//   k = cats.effect.internals.IOAsync$$$Lambda$12047/1036335747@6ab0a610,</span>
+<span class="c1">//   k = cats.effect.internals.IOAsync$$$Lambda$12067/854094057@4d89099a,</span>
 <span class="c1">//   trampolineAfter = true,</span>
 <span class="c1">//   trace = StackTrace(</span>
 <span class="c1">//     stackTrace = List(</span>
@@ -123,7 +123,7 @@
 <span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
 <span class="c1">//    = Headers(),</span>
 <span class="c1">//    = Stream(..),</span>
-<span class="c1">//    = org.typelevel.vault.Vault@6eaecc84</span>
+<span class="c1">//    = org.typelevel.vault.Vault@1dfd12f7</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleUnCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -139,7 +139,7 @@
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
 <span class="c1">// exampleUnCached: IO[(Int, Int)] = Async(</span>
-<span class="c1">//   k = cats.effect.internals.IOAsync$$$Lambda$12047/1036335747@698538a1,</span>
+<span class="c1">//   k = cats.effect.internals.IOAsync$$$Lambda$12067/854094057@1f56e1e6,</span>
 <span class="c1">//   trampolineAfter = true,</span>
 <span class="c1">//   trace = StackTrace(</span>
 <span class="c1">//     stackTrace = List(</span>
