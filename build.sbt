@@ -8,7 +8,7 @@ val fs2V = "2.5.9"
 val scodecV = "1.11.8"
 val scodecCatsV = "1.1.0"
 val http4sV = "0.22.1"
-val circeV = "0.13.0"
+val circeV = "0.14.1"
 val specs2V = "4.12.3"
 
 val mulesV = "0.4.0"
@@ -36,7 +36,7 @@ lazy val core = project.in(file("core"))
       "org.http4s"                  %% "http4s-client"              % http4sV,
 
       "io.chrisdavenport"            %% "mules"                      % mulesV,
-      "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.0",
+      "io.chrisdavenport"            %% "cats-effect-time"           % "0.1.2",
       "com.comcast"            %% "ip4s-test-kit"             % "2.0.3"
     ) ++ testingDeps
   )
