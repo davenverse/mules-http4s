@@ -9,12 +9,13 @@ import scala.concurrent.duration._
 import cats._
 import cats.implicits._
 import cats.data._
+import org.typelevel.ci._
 
 private[http4s] object CacheRules {
 
   def requestCanUseCached[F[_]](req: Request[F]): Boolean =  
     methodIsCacheable(req.method) &&
-    !req.headers.get(`Cache-Control`).exists{
+    !req.headers.get[`Cache-Control`].exists{
       _.values.exists{ 
         case `no-cache`(_) => true
         case _ => false
@@ -47,7 +48,7 @@ private[http4s] object CacheRules {
   def statusIsCacheable(s: Status): Boolean = cacheableStatus.contains(s)
 
   def cacheAgeAcceptable[F[_]](req: Request[F], item: CacheItem, now: HttpDate): Boolean = {
-    req.headers.get(`Cache-Control`) match {
+    req.headers.get[`Cache-Control`] match {
       case None => 
         
         // TODO: Investigate how this check works with cache-control
@@ -83,14 +84,14 @@ private[http4s] object CacheRules {
     }
   }
 
-  def onlyIfCached[F[_]](req: Request[F]): Boolean = req.headers.get(`Cache-Control`)
+  def onlyIfCached[F[_]](req: Request[F]): Boolean = req.headers.get[`Cache-Control`]
     .exists{_.values.exists{ 
       case `only-if-cached` => true
       case _ => false
     }}
 
   def cacheControlNoStoreExists[F[_]](response: Response[F]): Boolean = response.headers
-    .get(`Cache-Control`)
+    .get[`Cache-Control`]
     .toList
     .flatMap(_.values.toList)
     .exists{
@@ -99,7 +100,7 @@ private[http4s] object CacheRules {
     }
 
   def cacheControlPrivateExists[F[_]](response: Response[F]): Boolean = response.headers
-    .get(`Cache-Control`)
+    .get[`Cache-Control`]
     .toList
     .flatMap(_.values.toList)
     .exists{
@@ -108,11 +109,11 @@ private[http4s] object CacheRules {
     }
 
   def authorizationHeaderExists[F[_]](response: Response[F]): Boolean = response.headers
-    .get(Authorization)
+    .get[Authorization]
     .isDefined
 
   def cacheControlPublicExists[F[_]](response: Response[F]): Boolean = response.headers
-    .get(`Cache-Control`)
+    .get[`Cache-Control`]
     .toList
     .flatMap(_.values.toList)
     .exists{
@@ -121,11 +122,11 @@ private[http4s] object CacheRules {
     }
 
   def mustRevalidate[F[_]](response: Message[F]): Boolean = {
-    response.headers.get(`Cache-Control`).exists{_.values.exists{ 
+    response.headers.get[`Cache-Control`].exists{_.values.exists{ 
       case CacheDirective.`no-cache`(_) => true
       case CacheDirective.`max-age`(age) if age <= 0.seconds => true
       case _ => false
-    }} || response.headers.get(Pragma).exists(_.value === "no-cache")
+    }} || response.headers.get(CIString("Pragma")).exists(_.exists(_.value === "no-cache"))
   }
 
   def isCacheable[F[_]](req: Request[F], response: Response[F], cacheType: CacheType): Boolean = {
@@ -141,20 +142,20 @@ private[http4s] object CacheRules {
     } else if (cacheType.isShared && cacheControlPrivateExists(response)) {
       // println("Cache is shared and Cache-Control private exists - not Cacheable")
       false
-    } else if (cacheType.isShared && response.headers.get(Vary).exists(h => h.value === "*")) {
+    } else if (cacheType.isShared && response.headers.get(CIString("Vary")).exists(h => h.exists(_.value === "*"))) {
       // println("Cache is shared and Vary header exists as * - not Cacheable")
       false
     } else if (cacheType.isShared && authorizationHeaderExists(response) && !cacheControlPublicExists(response)) {
       // println("Cache is Shared and Authorization Header is present and Cache-Control public is not present - not Cacheable")
       false
-    } else if (mustRevalidate(response) && !(response.headers.get(ETag).isDefined || response.headers.get(`Last-Modified`).isDefined)) {
+    } else if (mustRevalidate(response) && !(response.headers.get[ETag].isDefined || response.headers.get[`Last-Modified`].isDefined)) {
       false
     } else if (req.method === Method.GET || req.method === Method.HEAD) {
       true
     } else if (cacheControlPublicExists(response) || cacheControlPrivateExists(response)) {
       true
     } else {
-      response.headers.get(Expires).isDefined
+      response.headers.get[Expires].isDefined
     }
   }
 
@@ -167,15 +168,15 @@ private[http4s] object CacheRules {
   }
 
   def getIfMatch(cachedResponse: CachedResponse): Option[`If-None-Match`] = 
-    cachedResponse.headers.get(ETag).map(_.tag).flatMap{etag => 
-    if (!etag.weak) `If-None-Match`(NonEmptyList.of(etag).some).some
+    cachedResponse.headers.get[ETag].map(_.tag).flatMap{etag => 
+    if (etag.weakness != EntityTag.Weak) `If-None-Match`(NonEmptyList.of(etag).some).some
     else None
   }
 
   def getIfUnmodifiedSince(cachedResponse: CachedResponse): Option[`If-Unmodified-Since`] = {
     for {
-      lastModified <- cachedResponse.headers.get(`Last-Modified`)
-      date <- cachedResponse.headers.get(Date)
+      lastModified <- cachedResponse.headers.get[`Last-Modified`]
+      date <- cachedResponse.headers.get[Date]
       _ <- Alternative[Option].guard(date.date.epochSecond - lastModified.date.epochSecond >= 60L)
     } yield `If-Unmodified-Since`(lastModified.date)
   }
@@ -186,10 +187,10 @@ private[http4s] object CacheRules {
 
       // Age Or Zero
       val initAgeSeconds: Long = now.epochSecond - 
-        response.headers.get(Date).map(date => date.date.epochSecond)
+        response.headers.get[Date].map(date => date.date.epochSecond)
           .getOrElse(0L)  
 
-      response.headers.get(Age)
+      response.headers.get[Age]
         .map(age => Math.max(age.age, initAgeSeconds))
         .getOrElse(initAgeSeconds)
         .seconds
@@ -198,7 +199,7 @@ private[http4s] object CacheRules {
     // Since We do not emit warnings on cache times over 24 hours, limit cache time
     // to max of 24 hours.
     private def freshnessLifetime[F[_]](now: HttpDate, response: Message[F]) = {
-      response.headers.get(`Cache-Control`)
+      response.headers.get[`Cache-Control`]
         .flatMap{ 
             case `Cache-Control`(directives) => 
               directives.collectFirst{ 
@@ -210,11 +211,11 @@ private[http4s] object CacheRules {
               }
         }.orElse{
           for {
-            exp <- response.headers.get(Expires)
-            date <- response.headers.get(Date)
+            exp <- response.headers.get[Expires]
+            date <- response.headers.get[Date]
           } yield (exp.expirationDate.epochSecond - date.date.epochSecond).seconds
         }.orElse{
-          response.headers.get(`Last-Modified`)
+          response.headers.get[`Last-Modified`]
             .map{lm => 
               val estimatedLifetime = (now.epochSecond - lm.date.epochSecond) / 10
               Math.min(24.hours.toSeconds, estimatedLifetime).seconds

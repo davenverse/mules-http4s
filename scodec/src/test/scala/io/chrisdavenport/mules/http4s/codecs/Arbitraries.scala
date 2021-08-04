@@ -4,14 +4,14 @@ import io.chrisdavenport.mules.http4s._
 import _root_.scodec.bits.ByteVector
 import org.http4s._
 import org.http4s.implicits._
-import org.http4s.util.CaseInsensitiveString
+import org.typelevel.ci._
 import java.time._
 import java.util.Locale
 import cats._
 import cats.implicits._
 import org.scalacheck._
 import org.scalacheck.cats.implicits._
-
+import com.comcast.ip4s
 trait Arbitraries {
     implicit lazy val arbitraryByteVector: Arbitrary[ByteVector] =
     Arbitrary(Gen.containerOf[Array, Byte](Arbitrary.arbitrary[Byte]).map(ByteVector(_)))
@@ -64,7 +64,7 @@ trait Arbitraries {
       for {
         token <- genToken
         value <- genFieldValue
-      } yield Header.Raw(CaseInsensitiveString(token), value)
+      } yield Header.Raw(CIString(token), value)
     }
 
   implicit lazy val headers: Arbitrary[Headers]  = Arbitrary(Gen.listOf(Arbitrary.arbitrary[Header.Raw]).map(Headers(_)))
@@ -108,36 +108,18 @@ trait Arbitraries {
   val genHexDigit: Gen[Char] = Gen.oneOf(
     List('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'))
 
-    // https://tools.ietf.org/html/rfc3986#appendix-A
-  implicit lazy val http4sTestingArbitraryForIpv4Address: Arbitrary[Uri.Ipv4Address] = Arbitrary {
-    for {
-      a <- Arbitrary.arbitrary[Byte]
-      b <- Arbitrary.arbitrary[Byte]
-      c <- Arbitrary.arbitrary[Byte]
-      d <- Arbitrary.arbitrary[Byte]
-    } yield Uri.Ipv4Address(a, b, c, d)
-  }
+  
+  implicit val http4sTestingArbitraryForIpv4Address: Arbitrary[Uri.Ipv4Address] =
+    Arbitrary(ip4s.Arbitraries.ipv4Generator.map(org.http4s.Uri.Ipv4Address.apply))
 
-  implicit lazy val http4sTestingCogenForIpv4Address: Cogen[Uri.Ipv4Address] =
-    Cogen[(Byte, Byte, Byte, Byte)].contramap(ipv4 => (ipv4.a, ipv4.b, ipv4.c, ipv4.d))
+  implicit val http4sTestingCogenForIpv4Address: Cogen[Uri.Ipv4Address] =
+    Cogen[Array[Byte]].contramap(_.address.toBytes)
 
-  // https://tools.ietf.org/html/rfc3986#appendix-A
-  implicit lazy val http4sTestingArbitraryForIpv6Address: Arbitrary[Uri.Ipv6Address] = Arbitrary {
-    for {
-      a <- Arbitrary.arbitrary[Short]
-      b <- Arbitrary.arbitrary[Short]
-      c <- Arbitrary.arbitrary[Short]
-      d <- Arbitrary.arbitrary[Short]
-      e <- Arbitrary.arbitrary[Short]
-      f <- Arbitrary.arbitrary[Short]
-      g <- Arbitrary.arbitrary[Short]
-      h <- Arbitrary.arbitrary[Short]
-    } yield Uri.Ipv6Address(a, b, c, d, e, f, g, h)
-  }
+  implicit val http4sTestingArbitraryForIpv6Address: Arbitrary[Uri.Ipv6Address] =
+    Arbitrary(ip4s.Arbitraries.ipv6Generator.map(Uri.Ipv6Address.apply))
 
-  implicit lazy val http4sTestingCogenForIpv6Address: Cogen[Uri.Ipv6Address] =
-    Cogen[(Short, Short, Short, Short, Short, Short, Short, Short)]
-      .contramap(ipv6 => (ipv6.a, ipv6.b, ipv6.c, ipv6.d, ipv6.e, ipv6.f, ipv6.g, ipv6.h))
+  implicit val http4sTestingCogenForIpv6Address: Cogen[Uri.Ipv6Address] =
+    Cogen[Array[Byte]].contramap(_.address.toBytes)
 
   implicit lazy val http4sTestingArbitraryForUriHost: Arbitrary[Uri.Host] = Arbitrary {
     val genRegName =
@@ -206,7 +188,7 @@ trait Arbitraries {
     Cogen[String].contramap(_.coding.toLowerCase(Locale.ROOT))
 
   implicit lazy val http4sTestingCogenForPath: Cogen[Uri.Path] =
-    Cogen[String].contramap(identity)
+    Cogen[String].contramap(p => p.renderString)
 
   implicit lazy val http4sTestingAbitraryForPath: Arbitrary[Uri.Path] = Arbitrary {
     val genSegmentNzNc =
@@ -220,8 +202,7 @@ trait Arbitraries {
     val genPathNoScheme = genSegmentNzNc |+| genPathAbEmpty
     val genPathAbsolute = Gen.const("/") |+| Gen.oneOf(genPathRootless, Gen.const(Monoid[String].empty))
 
-    Gen.oneOf(genPathAbEmpty, genPathAbsolute, genPathNoScheme, genPathRootless, genPathEmpty).map(
-      identity)//Uri.Path.fromString)
+    Gen.oneOf(genPathAbEmpty, genPathAbsolute, genPathNoScheme, genPathRootless, genPathEmpty).map(Uri.Path.unsafeFromString(_))//Uri.Path.fromString)
   }
 
   
