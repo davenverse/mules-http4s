@@ -30,7 +30,7 @@ import io.chrisdavenport.mules.http4s._
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.client.Client
-import org.http4s.client.asynchttpclient._
+import org.http4s.asynchttpclient.client._
 
 implicit val T = IO.timer(scala.concurrent.ExecutionContext.global)
 implicit val CS = IO.contextShift(scala.concurrent.ExecutionContext.global)
@@ -54,7 +54,7 @@ val exampleCached = AsyncHttpClient.resource[IO]().use{ client =>
   } yield (count1, count2)
 }
 
-exampleCached.unsafeRunSync
+exampleCached.unsafeRunSync()
 
 val dadJokesRequest = Request[IO](Method.GET, uri"https://icanhazdadjoke.com/")
 
@@ -71,5 +71,5 @@ val exampleUnCached = AsyncHttpClient.resource[IO]().use{ client =>
   } yield (count1, count2)
 }
 
-exampleUnCached.unsafeRunSync
+exampleUnCached.unsafeRunSync()
 ```
