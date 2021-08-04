@@ -1,6 +1,6 @@
 package io.chrisdavenport.mules.http4s
 
-import io.chrisdavenport.vault.Vault
+import org.typelevel.vault.Vault
 import org.http4s._
 import fs2._
 

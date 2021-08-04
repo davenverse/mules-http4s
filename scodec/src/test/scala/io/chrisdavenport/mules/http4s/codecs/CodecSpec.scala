@@ -4,14 +4,13 @@ import io.chrisdavenport.mules.http4s._
 import org.http4s._
 import org.http4s.implicits._
 import Arbitraries._
-
 class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCheck {
 
   "CachedResponse Codec" should {
     "encode a specific response" in {
       val baseString = "Hello"
-      val cached = CachedResponse.fromResponse(
-        Response[fs2.Pure](Status.Ok, HttpVersion.`HTTP/1.0`, Headers.of(Header("foo", "bar"))).withEntity(baseString)
+      val cached = CachedResponse.fromResponse[fs2.Pure, cats.Id](
+        Response[fs2.Pure](Status.Ok, HttpVersion.`HTTP/1.0`, Headers(("foo", "bar"))).withEntity(baseString)
       )
       val encoded = cachedResponseCodec.encode(cached)
       val decoded = encoded.flatMap(bv => cachedResponseCodec.decode(bv))
@@ -19,7 +18,7 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
       decoded.toEither must beRight.like{
         case a  => 
           (a.value must_=== cached) and
-            (a.value.toResponse[cats.effect.IO].as[String].unsafeRunSync must_=== baseString)
+            (a.value.toResponse[cats.effect.IO].as[String].unsafeRunSync() must_=== baseString)
       }
     }
 

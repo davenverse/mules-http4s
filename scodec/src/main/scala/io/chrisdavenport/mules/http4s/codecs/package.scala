@@ -5,6 +5,7 @@ import _root_.scodec.interop.cats._
 import _root_.scodec._
 import _root_.scodec.codecs._
 import org.http4s._
+import org.typelevel.ci._
 import java.nio.charset.StandardCharsets
 
 package object codecs {
@@ -31,13 +32,13 @@ package object codecs {
           s.split("\r\n").toList.traverse{line => 
             val idx = line.indexOf(':')
             if (idx >= 0) {
-              Attempt.successful(Header(line.substring(0, idx), line.substring(idx + 1).trim))
-            } else Attempt.failure[Header](Err(s"No : found in Header - $line"))
+              Attempt.successful(Header.Raw(CIString(line.substring(0, idx)), line.substring(idx + 1).trim))
+            } else Attempt.failure[Header.Raw](Err(s"No : found in Header - $line"))
           }.map(Headers(_))
         
     }{h => 
       Attempt.successful(
-        h.toList.map(h => s"${h.name.toString()}:${h.value}")
+        h.headers.map(h => s"${h.name.toString}:${h.value}")
           .intercalate("\r\n")
       )
     }

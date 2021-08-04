@@ -8,6 +8,7 @@ import cats._
 import cats.implicits._
 import cats.data._
 import fs2.Stream
+import org.http4s.Header.ToRaw.modelledHeadersToRaw
 
 private[http4s] class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] private[http4s] (cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType)(implicit Compiler: Stream.Compiler[F,F]){
 
@@ -29,8 +30,8 @@ private[http4s] class Caching[F[_]: MonadError[*[_], Throwable]: JavaTime] priva
             } else {
               app.run(
                 req
-                .putHeaders(CacheRules.getIfMatch(item.response).toSeq:_*)
-                .putHeaders(CacheRules.getIfUnmodifiedSince(item.response).toSeq:_*)
+                .putHeaders(CacheRules.getIfMatch(item.response).map(modelledHeadersToRaw(_)).toSeq:_*)
+                .putHeaders(CacheRules.getIfUnmodifiedSince(item.response).map(modelledHeadersToRaw(_)).toSeq:_*)
               ).flatMap(resp => fk(withResponse(req, resp)))
             }
         }

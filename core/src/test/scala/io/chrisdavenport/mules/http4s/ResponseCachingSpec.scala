@@ -4,7 +4,7 @@ import cats.implicits._
 import cats.data._
 import cats.effect._
 import cats.effect.concurrent._
-import cats.effect.specs2.CatsIO
+import cats.effect.testing.specs2.CatsIO
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.headers._
@@ -29,7 +29,7 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsIO {
                 ),
                 Date(now),
                 Expires(now),
-                Header("Pragma", "no-cache")
+                ("Pragma", "no-cache")
               )
           }
         }.orNotFound
