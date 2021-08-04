@@ -15,7 +15,6 @@
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">cats._</span>
 <span class="k">import</span> <span class="nn">cats.implicits._</span>
 <span class="k">import</span> <span class="nn">cats.effect._</span>
-<span class="k">import</span> <span class="nn">cats.effect.concurrent.Ref</span>
 <span class="k">import</span> <span class="nn">io.chrisdavenport.mules._</span>
 <span class="k">import</span> <span class="nn">io.chrisdavenport.mules.caffeine._</span>
 <span class="k">import</span> <span class="nn">io.chrisdavenport.mules.http4s._</span>
@@ -24,12 +23,7 @@
 <span class="k">import</span> <span class="nn">org.http4s.client.Client</span>
 <span class="k">import</span> <span class="nn">org.http4s.asynchttpclient.client._</span>
 
-<span class="k">implicit</span> <span class="k">val</span> <span class="nv">T</span> <span class="k">=</span> <span class="nv">IO</span><span class="o">.</span><span class="py">timer</span><span class="o">(</span><span class="nv">scala</span><span class="o">.</span><span class="py">concurrent</span><span class="o">.</span><span class="py">ExecutionContext</span><span class="o">.</span><span class="py">global</span><span class="o">)</span>
-<span class="c1">// T: Timer[IO] = cats.effect.internals.IOTimer@4bfcdd1b</span>
-<span class="k">implicit</span> <span class="k">val</span> <span class="nv">CS</span> <span class="k">=</span> <span class="nv">IO</span><span class="o">.</span><span class="py">contextShift</span><span class="o">(</span><span class="nv">scala</span><span class="o">.</span><span class="py">concurrent</span><span class="o">.</span><span class="py">ExecutionContext</span><span class="o">.</span><span class="py">global</span><span class="o">)</span>
-<span class="c1">// CS: ContextShift[IO] = cats.effect.internals.IOContextShift@24b50c91</span>
-
-<span class="k">def</span> <span class="nf">testMiddleware</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Bracket</span><span class="o">[</span><span class="kt">*</span><span class="o">[</span><span class="k">_</span><span class="o">]</span>, <span class="kt">Throwable</span><span class="o">]](</span><span class="n">c</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">],</span> <span class="n">ref</span><span class="k">:</span> <span class="kt">Ref</span><span class="o">[</span><span class="kt">F</span>, <span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
+<span class="k">def</span> <span class="nf">testMiddleware</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Concurrent</span><span class="o">](</span><span class="n">c</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">],</span> <span class="n">ref</span><span class="k">:</span> <span class="kt">Ref</span><span class="o">[</span><span class="kt">F</span>, <span class="kt">Int</span><span class="o">])</span><span class="k">:</span> <span class="kt">Client</span><span class="o">[</span><span class="kt">F</span><span class="o">]</span> <span class="k">=</span> <span class="o">{</span>
   <span class="nc">Client</span><span class="o">{</span><span class="n">req</span> <span class="k">=&gt;</span> <span class="nv">c</span><span class="o">.</span><span class="py">run</span><span class="o">(</span><span class="n">req</span><span class="o">).</span><span class="py">evalMap</span><span class="o">(</span><span class="n">resp</span> <span class="k">=&gt;</span> <span class="nv">ref</span><span class="o">.</span><span class="py">update</span><span class="o">(</span><span class="k">_</span> <span class="o">+</span> <span class="mi">1</span><span class="o">).</span><span class="py">as</span><span class="o">(</span><span class="n">resp</span><span class="o">))}</span>
 <span class="o">}</span>
 
@@ -52,7 +46,7 @@
 <span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
 <span class="c1">//    = Headers(),</span>
 <span class="c1">//    = Stream(..),</span>
-<span class="c1">//    = org.typelevel.vault.Vault@2a67e638</span>
+<span class="c1">//    = org.typelevel.vault.Vault@3205d6f1</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -67,39 +61,12 @@
     <span class="n">count2</span> <span class="k">&lt;-</span> <span class="nv">counter</span><span class="o">.</span><span class="py">get</span>
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
-<span class="c1">// exampleCached: IO[(Int, Int)] = Async(</span>
-<span class="c1">//   k = cats.effect.internals.IOAsync$$$Lambda$12317/641697154@7dd06d49,</span>
-<span class="c1">//   trampolineAfter = true,</span>
-<span class="c1">//   trace = StackTrace(</span>
-<span class="c1">//     stackTrace = List(</span>
-<span class="c1">//       cats.effect.internals.IOTracing$.buildFrame(IOTracing.scala:48),</span>
-<span class="c1">//       cats.effect.internals.IOTracing$.buildCachedFrame(IOTracing.scala:39),</span>
-<span class="c1">//       cats.effect.internals.IOTracing$.cached(IOTracing.scala:34),</span>
-<span class="c1">//       cats.effect.internals.IOAsync$.apply(IOAsync.scala:30),</span>
-<span class="c1">//       cats.effect.internals.IOBracket$.apply(IOBracket.scala:54),</span>
-<span class="c1">//       cats.effect.IO.bracketCase(IO.scala:613),</span>
-<span class="c1">//       cats.effect.IOLowPriorityInstances$IOEffect.bracketCase(IO.scala:906),</span>
-<span class="c1">//       cats.effect.IOLowPriorityInstances$IOEffect.bracketCase(IO.scala:865),</span>
-<span class="c1">//       cats.effect.Resource.loop$1(Resource.scala:126),</span>
-<span class="c1">//       cats.effect.Resource.fold(Resource.scala:135),</span>
-<span class="c1">//       cats.effect.Resource.use_(Resource.scala:142),</span>
-<span class="c1">//       cats.effect.ResourceLike.use(ResourceLike.scala:33),</span>
-<span class="c1">//       repl.MdocSession$App.&lt;init&gt;(index.md:55),</span>
-<span class="c1">//       repl.MdocSession$.app(index.md:3),</span>
-<span class="c1">//       mdoc.internal.document.DocumentBuilder$$doc$.$anonfun$build$2(DocumentBuilder.scala:89),</span>
-<span class="c1">//       scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18),</span>
-<span class="c1">//       scala.util.DynamicVariable.withValue(DynamicVariable.scala:59),</span>
-<span class="c1">//       scala.Console$.withErr(Console.scala:193),</span>
-<span class="c1">//       mdoc.internal.document.DocumentBuilder$$doc$.$anonfun$build$1(DocumentBuilder.scala:89),</span>
-<span class="c1">//       scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18),</span>
-<span class="c1">//       scala.util.DynamicVariable.withValue(DynamicVariable.scala:59),</span>
-<span class="c1">//       scala.Console$.withOut(Console.scala:164),</span>
-<span class="c1">//       mdoc.internal.document.DocumentBuilder$$doc$.build(DocumentBuilder.scala:88),</span>
-<span class="c1">//       mdoc.internal.markdown.MarkdownBuilder$.$anonfun$buildDocument$2(MarkdownBuilder.scala:47),</span>
-<span class="c1">//       mdoc.internal.markdown.MarkdownBuilder$$anon$1.run(MarkdownBuilder.scala:103)</span>
-<span class="c1">//     )</span>
-<span class="c1">//   )</span>
+<span class="c1">// exampleCached: IO[(Int, Int)] = Uncancelable(</span>
+<span class="c1">//   body = cats.effect.IO$$$Lambda$12075/654542836@21effae8,</span>
+<span class="c1">//   event = cats.effect.tracing.TracingEvent$StackTrace</span>
 <span class="c1">// )</span>
+
+<span class="k">import</span> <span class="nn">cats.effect.unsafe.implicits.global</span> <span class="c1">// DON'T DO THIS IN PROD // DON'T DO THIS IN PROD</span>
 
 <span class="nv">exampleCached</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">()</span>
 <span class="c1">// res0: (Int, Int) = (1, 1)</span>
@@ -123,7 +90,7 @@
 <span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
 <span class="c1">//    = Headers(),</span>
 <span class="c1">//    = Stream(..),</span>
-<span class="c1">//    = org.typelevel.vault.Vault@6c455408</span>
+<span class="c1">//    = org.typelevel.vault.Vault@5e3996db</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleUnCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -138,38 +105,9 @@
     <span class="n">count2</span> <span class="k">&lt;-</span> <span class="nv">counter</span><span class="o">.</span><span class="py">get</span>
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
-<span class="c1">// exampleUnCached: IO[(Int, Int)] = Async(</span>
-<span class="c1">//   k = cats.effect.internals.IOAsync$$$Lambda$12317/641697154@514e8fc0,</span>
-<span class="c1">//   trampolineAfter = true,</span>
-<span class="c1">//   trace = StackTrace(</span>
-<span class="c1">//     stackTrace = List(</span>
-<span class="c1">//       cats.effect.internals.IOTracing$.buildFrame(IOTracing.scala:48),</span>
-<span class="c1">//       cats.effect.internals.IOTracing$.buildCachedFrame(IOTracing.scala:39),</span>
-<span class="c1">//       cats.effect.internals.IOTracing$.cached(IOTracing.scala:34),</span>
-<span class="c1">//       cats.effect.internals.IOAsync$.apply(IOAsync.scala:30),</span>
-<span class="c1">//       cats.effect.internals.IOBracket$.apply(IOBracket.scala:54),</span>
-<span class="c1">//       cats.effect.IO.bracketCase(IO.scala:613),</span>
-<span class="c1">//       cats.effect.IOLowPriorityInstances$IOEffect.bracketCase(IO.scala:906),</span>
-<span class="c1">//       cats.effect.IOLowPriorityInstances$IOEffect.bracketCase(IO.scala:865),</span>
-<span class="c1">//       cats.effect.Resource.loop$1(Resource.scala:126),</span>
-<span class="c1">//       cats.effect.Resource.fold(Resource.scala:135),</span>
-<span class="c1">//       cats.effect.Resource.use_(Resource.scala:142),</span>
-<span class="c1">//       cats.effect.ResourceLike.use(ResourceLike.scala:33),</span>
-<span class="c1">//       repl.MdocSession$App.&lt;init&gt;(index.md:55),</span>
-<span class="c1">//       repl.MdocSession$.app(index.md:3),</span>
-<span class="c1">//       mdoc.internal.document.DocumentBuilder$$doc$.$anonfun$build$2(DocumentBuilder.scala:89),</span>
-<span class="c1">//       scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18),</span>
-<span class="c1">//       scala.util.DynamicVariable.withValue(DynamicVariable.scala:59),</span>
-<span class="c1">//       scala.Console$.withErr(Console.scala:193),</span>
-<span class="c1">//       mdoc.internal.document.DocumentBuilder$$doc$.$anonfun$build$1(DocumentBuilder.scala:89),</span>
-<span class="c1">//       scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18),</span>
-<span class="c1">//       scala.util.DynamicVariable.withValue(DynamicVariable.scala:59),</span>
-<span class="c1">//       scala.Console$.withOut(Console.scala:164),</span>
-<span class="c1">//       mdoc.internal.document.DocumentBuilder$$doc$.build(DocumentBuilder.scala:88),</span>
-<span class="c1">//       mdoc.internal.markdown.MarkdownBuilder$.$anonfun$buildDocument$2(MarkdownBuilder.scala:47),</span>
-<span class="c1">//       mdoc.internal.markdown.MarkdownBuilder$$anon$1.run(MarkdownBuilder.scala:103)</span>
-<span class="c1">//     )</span>
-<span class="c1">//   )</span>
+<span class="c1">// exampleUnCached: IO[(Int, Int)] = Uncancelable(</span>
+<span class="c1">//   body = cats.effect.IO$$$Lambda$12075/654542836@429771b3,</span>
+<span class="c1">//   event = cats.effect.tracing.TracingEvent$StackTrace</span>
 <span class="c1">// )</span>
 
 <span class="nv">exampleUnCached</span><span class="o">.</span><span class="py">unsafeRunSync</span><span class="o">()</span>
