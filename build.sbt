@@ -42,7 +42,7 @@ lazy val scodec = project.in(file("scodec"))
   .settings(
     name := "mules-http4s-scodec",
     libraryDependencies ++= Seq(
-      "org.scodec"             %% "scodec-core"      % (if (isDotty.value) "2.0.0" else "1.11.8"),
+      "org.scodec"             %% "scodec-core"      % (if (isDotty.value) "2.0.0" else "1.11.9"),
       "org.scodec"                  %% "scodec-cats"                % scodecCatsV,
     ) ++ testingDeps
   )
