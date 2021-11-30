@@ -33,7 +33,7 @@ lazy val core = project.in(file("core"))
 
       "io.chrisdavenport"            %% "mules"                      % mulesV,
       "io.chrisdavenport"            %% "cats-effect-time"           % "0.2.0",
-      "com.comcast"            %% "ip4s-test-kit"             % "3.0.4"
+      "com.comcast"            %% "ip4s-test-kit"             % "3.1.2"
     ) ++ testingDeps
   )
 
