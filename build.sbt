@@ -10,7 +10,7 @@ val http4sV = "0.23.6"
 val circeV = "0.14.1"
 val specs2V = "4.12.3"
 
-val mulesV = "0.5.0-M2"
+val mulesV = "0.5.0"
 
 // Projects
 lazy val `mules-http4s` = project.in(file("."))
