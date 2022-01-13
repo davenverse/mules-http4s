@@ -32,8 +32,7 @@ lazy val core = project.in(file("core"))
       "org.http4s"                  %% "http4s-client"              % http4sV,
 
       "io.chrisdavenport"            %% "mules"                      % mulesV,
-      "io.chrisdavenport"            %% "cats-effect-time"           % "0.2.0",
-      "com.comcast"            %% "ip4s-test-kit"             % "3.0.4"
+      "io.chrisdavenport"            %% "cats-effect-time"           % "0.2.0"
     ) ++ testingDeps
   )
 
@@ -66,6 +65,7 @@ lazy val testingDeps = Seq(
   "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
   "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
   "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.1"       % Test,
-  "org.typelevel"              %% "cats-effect-testing-specs2" % "1.4.0"       %  Test,
+  "org.typelevel"               %% "cats-effect-testing-specs2" % "1.3.0"       % Test,
   "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
+  "com.comcast"                 %% "ip4s-test-kit"              % "3.0.4"       % Test
 )
