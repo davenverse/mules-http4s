@@ -46,7 +46,7 @@
 <span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
 <span class="c1">//    = Headers(),</span>
 <span class="c1">//    = Stream(..),</span>
-<span class="c1">//    = org.typelevel.vault.Vault@7d405a75</span>
+<span class="c1">//    = org.typelevel.vault.Vault@4888496e</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -62,7 +62,7 @@
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
 <span class="c1">// exampleCached: IO[(Int, Int)] = Uncancelable(</span>
-<span class="c1">//   body = cats.effect.IO$$$Lambda$12291/555576648@586980c5,</span>
+<span class="c1">//   body = cats.effect.IO$$$Lambda$12224/1581914870@580086cb,</span>
 <span class="c1">//   event = cats.effect.tracing.TracingEvent$StackTrace</span>
 <span class="c1">// )</span>
 
@@ -90,7 +90,7 @@
 <span class="c1">//    = HttpVersion(major = 1, minor = 1),</span>
 <span class="c1">//    = Headers(),</span>
 <span class="c1">//    = Stream(..),</span>
-<span class="c1">//    = org.typelevel.vault.Vault@74062751</span>
+<span class="c1">//    = org.typelevel.vault.Vault@801cc4b</span>
 <span class="c1">// )</span>
 
 <span class="k">val</span> <span class="nv">exampleUnCached</span> <span class="k">=</span> <span class="nv">AsyncHttpClient</span><span class="o">.</span><span class="py">resource</span><span class="o">[</span><span class="kt">IO</span><span class="o">]().</span><span class="py">use</span><span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span> 
@@ -106,7 +106,7 @@
   <span class="o">}</span> <span class="nf">yield</span> <span class="o">(</span><span class="n">count1</span><span class="o">,</span> <span class="n">count2</span><span class="o">)</span>
 <span class="o">}</span>
 <span class="c1">// exampleUnCached: IO[(Int, Int)] = Uncancelable(</span>
-<span class="c1">//   body = cats.effect.IO$$$Lambda$12291/555576648@b6a4856,</span>
+<span class="c1">//   body = cats.effect.IO$$$Lambda$12224/1581914870@2c8271c,</span>
 <span class="c1">//   event = cats.effect.tracing.TracingEvent$StackTrace</span>
 <span class="c1">// )</span>
 
