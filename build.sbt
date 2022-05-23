@@ -67,5 +67,5 @@ lazy val testingDeps = Seq(
   "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.1"       % Test,
   "org.typelevel"               %% "cats-effect-testing-specs2" % "1.4.0"       % Test,
   "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
-  "com.comcast"                 %% "ip4s-test-kit"              % "3.1.2"       % Test
+  "com.comcast"                 %% "ip4s-test-kit"              % "3.1.3"       % Test
 )
