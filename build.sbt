@@ -64,7 +64,7 @@ lazy val site = project.in(file("site"))
 lazy val testingDeps = Seq(
   "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
   "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
-  "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.1"       % Test,
+  "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.2"       % Test,
   "org.typelevel"               %% "cats-effect-testing-specs2" % "1.4.0"       % Test,
   "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
   "com.comcast"                 %% "ip4s-test-kit"              % "3.1.3"       % Test
