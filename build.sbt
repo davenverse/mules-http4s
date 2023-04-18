@@ -23,7 +23,7 @@ ThisBuild / tlJdkRelease := Some(8)
 
 val catsV = "2.9.0"
 val catsEffectV = "3.4.8"
-val fs2V = "3.2.7"
+val fs2V = "3.6.1"
 val scodecCatsV = "1.2.0"
 val http4sV = "0.23.18"
 val circeV = "0.14.5"
@@ -35,7 +35,7 @@ val mulesV = "0.7.0"
 lazy val `mules-http4s` = tlCrossRootProject
   .aggregate(core, scodec)
 
-lazy val core = crossProject(JVMPlatform, JSPlatform)
+lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("core"))
   .settings(
@@ -50,18 +50,20 @@ lazy val core = crossProject(JVMPlatform, JSPlatform)
       "org.http4s"                  %%% "http4s-server"              % http4sV,
       "org.http4s"                  %%% "http4s-client"              % http4sV,
 
-      "io.chrisdavenport"            %%% "mules"                      % mulesV,
-      "io.chrisdavenport"            %%% "cats-effect-time"           % "0.2.0",
+      "io.chrisdavenport"           %%% "mules"                      % mulesV,
+      "io.chrisdavenport"           %%% "cats-effect-time"           % "0.2.1",
       "org.specs2"                  %%% "specs2-core"                % specs2V       % Test,
       "org.specs2"                  %%% "specs2-scalacheck"          % specs2V       % Test,
       "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.3.2"       % Test,
       "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
-      "com.comcast"                 %%% "ip4s-test-kit"              % "3.1.3"       % Test
+      "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
     )
+  ).jsSettings(
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
   )
 
-lazy val scodec = crossProject(JVMPlatform, JSPlatform)
+lazy val scodec = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("scodec"))
   .dependsOn(core % "compile->compile, test->test")
@@ -77,8 +79,10 @@ lazy val scodec = crossProject(JVMPlatform, JSPlatform)
       "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.3.2"       % Test,
       "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
-      "com.comcast"                 %%% "ip4s-test-kit"              % "3.1.3"       % Test
+      "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
     )
+  ).jsSettings(
+    scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
   )
 
 lazy val site = project.in(file("site"))
