@@ -19,7 +19,7 @@ object CacheMiddleware {
 
   def client[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): Client[F] => Client[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {client: Client[F] => 
+    {(client: Client[F]) =>
       Client(req => 
         caching.request(Kleisli(req => client.run(req)), Resource.liftK)(req)
       )
@@ -28,7 +28,7 @@ object CacheMiddleware {
 
   def httpApp[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpApp[F] => HttpApp[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {app: HttpApp[F] => 
+    {(app: HttpApp[F]) =>
       Kleisli{ req => 
         caching.request(app, FunctionK.id)(req)
       }
@@ -37,7 +37,7 @@ object CacheMiddleware {
 
   def httpRoutes[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpRoutes[F] => HttpRoutes[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {app: HttpRoutes[F] => 
+    {(app: HttpRoutes[F]) =>
       Kleisli{ req => 
         caching.request(app, OptionT.liftK)(req)
       }
@@ -50,7 +50,7 @@ object CacheMiddleware {
     */
   def internalHttpApp[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpApp[F] => HttpApp[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {app: HttpApp[F] => 
+    {(app: HttpApp[F])=>
       Kleisli{ req => 
         caching.request(app, FunctionK.id)(req).map(resp => 
           resp.filterHeaders(removeCacheHeaders).putHeaders(noStoreStaticHeaders:_*)
@@ -65,8 +65,8 @@ object CacheMiddleware {
     * are not relayed to external callers.
     */
   def internalHttpRoutes[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpRoutes[F] => HttpRoutes[F] = {
-        val caching = new Caching[F](cache, cacheType){}
-    {app: HttpRoutes[F] => 
+    val caching = new Caching[F](cache, cacheType){}
+    {(app: HttpRoutes[F]) =>
       Kleisli{ req => 
         caching.request(app, OptionT.liftK)(req).map(resp => 
           resp.filterHeaders(removeCacheHeaders).putHeaders(noStoreStaticHeaders:_*)

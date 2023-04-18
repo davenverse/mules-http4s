@@ -13,7 +13,7 @@ import org.scalacheck._
 import org.scalacheck.cats.implicits._
 import com.comcast.ip4s
 trait Arbitraries {
-    implicit lazy val arbitraryByteVector: Arbitrary[ByteVector] =
+  implicit lazy val arbitraryByteVector: Arbitrary[ByteVector] =
     Arbitrary(Gen.containerOf[Array, Byte](Arbitrary.arbitrary[Byte]).map(ByteVector(_)))
   
   implicit lazy val arbStatus: Arbitrary[Status] = 
@@ -92,7 +92,7 @@ trait Arbitraries {
 
   implicit lazy val arbHttpDate: Arbitrary[HttpDate] = Arbitrary(genHttpDate)
   
-  implicit lazy val arbCacheItem = Arbitrary(
+  implicit lazy val arbCacheItem: Arbitrary[CacheItem] = Arbitrary(
     for {
       created <- Arbitrary.arbitrary[HttpDate]
       expires <- Arbitrary.arbitrary[Option[HttpDate]]
@@ -100,7 +100,7 @@ trait Arbitraries {
     } yield CacheItem(created, expires, cachedResponse)
   )
 
-  implicit lazy val arbMethod = Arbitrary(
+  implicit lazy val arbMethod: Arbitrary[Method] = Arbitrary(
     Gen.oneOf(Method.all)
   )
 

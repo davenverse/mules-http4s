@@ -1,6 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6")
+ThisBuild / crossScalaVersions := Seq("2.12.14", "2.13.6", "3.2.0")
 
 val catsV = "2.7.0"
 val catsEffectV = "3.3.12"
@@ -8,7 +8,7 @@ val fs2V = "3.2.7"
 val scodecCatsV = "1.1.0"
 val http4sV = "0.23.11"
 val circeV = "0.14.1"
-val specs2V = "4.12.3"
+val specs2V = "4.19.2"
 
 val mulesV = "0.5.0"
 
@@ -65,7 +65,7 @@ lazy val testingDeps = Seq(
   "org.specs2"                  %% "specs2-core"                % specs2V       % Test,
   "org.specs2"                  %% "specs2-scalacheck"          % specs2V       % Test,
   "io.chrisdavenport"           %% "cats-scalacheck"            % "0.3.1"       % Test,
-  "org.typelevel"               %% "cats-effect-testing-specs2" % "1.4.0"       % Test,
+  "org.typelevel"               %% "cats-effect-testing-specs2" % "1.5.0"       % Test,
   "org.http4s"                  %% "http4s-dsl"                 % http4sV       % Test,
   "com.comcast"                 %% "ip4s-test-kit"              % "3.1.3"       % Test
 )
