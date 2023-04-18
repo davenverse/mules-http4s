@@ -1,10 +1,9 @@
 package io.chrisdavenport.mules.http4s
 
 import cats._
-// import cats.effect._
+import cats.effect._
 import cats.implicits._
 import org.http4s.HttpDate
-import io.chrisdavenport.cats.effect.time.JavaTime
 
 /**
  * Cache Items are what we place in the cache, this is exposed
@@ -18,8 +17,8 @@ final case class CacheItem(
 
 object CacheItem {
 
-  def create[F[_]: JavaTime: MonadError[*[_], Throwable]](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] = 
-    JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow.map(date => 
+  def create[F[_]: Clock: MonadThrow](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] =
+    HttpDate.current[F].map(date =>
       new CacheItem(date, expires, response)
     )
 

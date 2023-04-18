@@ -2,7 +2,6 @@ package io.chrisdavenport.mules.http4s
 
 import cats.syntax.all._
 import cats.effect._
-import io.chrisdavenport.cats.effect.time.JavaTime
 import io.chrisdavenport.mules.Cache
 import org.http4s._
 import org.http4s.client.Client
@@ -17,28 +16,28 @@ import cats.arrow.FunctionK
  **/
 object CacheMiddleware {
 
-  def client[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): Client[F] => Client[F] = {
+  def client[F[_]: Concurrent: Clock](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): Client[F] => Client[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {client: Client[F] => 
-      Client(req => 
-        caching.request(Kleisli(req => client.run(req)), Resource.liftK)(req)
+    {(client: Client[F]) =>
+      Client((req: Request[F]) =>
+        caching.request(Kleisli((req: Request[F]) => client.run(req)), Resource.liftK)(req)
       )
     }
   }
 
-  def httpApp[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpApp[F] => HttpApp[F] = {
+  def httpApp[F[_]: Concurrent: Clock](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpApp[F] => HttpApp[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {app: HttpApp[F] => 
-      Kleisli{ req => 
+    {(app: HttpApp[F]) =>
+      Kleisli{ (req: Request[F]) =>
         caching.request(app, FunctionK.id)(req)
       }
     }
   }
 
-  def httpRoutes[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpRoutes[F] => HttpRoutes[F] = {
+  def httpRoutes[F[_]: Concurrent: Clock](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpRoutes[F] => HttpRoutes[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {app: HttpRoutes[F] => 
-      Kleisli{ req => 
+    {(app: HttpRoutes[F]) =>
+      Kleisli{ (req: Request[F]) =>
         caching.request(app, OptionT.liftK)(req)
       }
     }
@@ -48,10 +47,10 @@ object CacheMiddleware {
     * Used on a Server rather than Client Caching Mechanism. Headers Applied Are Saved in the cache but caching headers
     * are not relayed to external callers.
     */
-  def internalHttpApp[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpApp[F] => HttpApp[F] = {
+  def internalHttpApp[F[_]: Concurrent: Clock](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpApp[F] => HttpApp[F] = {
     val caching = new Caching[F](cache, cacheType){}
-    {app: HttpApp[F] => 
-      Kleisli{ req => 
+    {(app: HttpApp[F]) =>
+      Kleisli{ (req: Request[F]) =>
         caching.request(app, FunctionK.id)(req).map(resp => 
           resp.filterHeaders(removeCacheHeaders).putHeaders(noStoreStaticHeaders:_*)
         )
@@ -64,10 +63,10 @@ object CacheMiddleware {
     * Used on a Server rather than Client Caching Mechanism. Headers Applied Are Saved in the cache but caching headers
     * are not relayed to external callers.
     */
-  def internalHttpRoutes[F[_]: Concurrent: JavaTime](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpRoutes[F] => HttpRoutes[F] = {
+  def internalHttpRoutes[F[_]: Concurrent: Clock](cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType): HttpRoutes[F] => HttpRoutes[F] = {
         val caching = new Caching[F](cache, cacheType){}
-    {app: HttpRoutes[F] => 
-      Kleisli{ req => 
+    {(app: HttpRoutes[F]) =>
+      Kleisli{ (req: Request[F]) =>
         caching.request(app, OptionT.liftK)(req).map(resp => 
           resp.filterHeaders(removeCacheHeaders).putHeaders(noStoreStaticHeaders:_*)
         )

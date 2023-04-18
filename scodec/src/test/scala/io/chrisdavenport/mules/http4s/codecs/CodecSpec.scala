@@ -5,6 +5,7 @@ import org.http4s._
 import org.http4s.implicits._
 import Arbitraries._
 import cats.effect.unsafe.implicits.global
+
 class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCheck {
 
   "CachedResponse Codec" should {
@@ -17,13 +18,13 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
       val decoded = encoded.flatMap(bv => cachedResponseCodec.decode(bv))
 
       decoded.toEither must beRight.like{
-        case a  => 
-          (a.value must_=== cached) and
-            (a.value.toResponse[cats.effect.IO].as[String].unsafeRunSync() must_=== baseString)
+        case a  =>
+          (a.value must_=== cached) &&
+            (a.value.toResponse[fs2.Pure].body.through(fs2.text.utf8.decode).compile.string must_=== baseString)
       }
     }
 
-    "round trip succesfully" in prop{ cached: CachedResponse =>
+    "round trip succesfully" in prop{ (cached: CachedResponse) =>
 
       val encoded = cachedResponseCodec.encode(cached)
       val decoded = encoded.flatMap(bv => cachedResponseCodec.decode(bv))
@@ -35,7 +36,7 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
   }
 
   "CacheItem Codec" should {
-    "round trip succesfully" in prop { cached: CacheItem =>
+    "round trip succesfully" in prop { (cached: CacheItem) =>
 
       val encoded = cacheItemCodec.encode(cached)
       val decoded = encoded.flatMap(bv => cacheItemCodec.decode(bv))
@@ -57,7 +58,7 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
       }
     }
 
-    "round trip succesfully" in prop { cacheKey: (Method, Uri) => Uri.fromString(cacheKey._2.renderString).isRight ==> {
+    "round trip succesfully" in prop { (cacheKey: (Method, Uri)) => Uri.fromString(cacheKey._2.renderString).isRight ==> {
       // Gave up after only 45 passed tests. 501 tests were discarded.
       // Uri.fromString(cacheKey._2.renderString).map(_ == cacheKey._2).getOrElse(false)  ==> {
       val encoded = keyTupleCodec.encode(cacheKey)

@@ -3,20 +3,19 @@ package io.chrisdavenport.mules.http4s.internal
 import io.chrisdavenport.mules.http4s._
 import org.http4s._
 import io.chrisdavenport.mules._
-import io.chrisdavenport.cats.effect.time._
 import cats._
 import cats.syntax.all._
 import cats.data._
 import cats.effect._
 import org.http4s.Header.ToRaw.modelledHeadersToRaw
 
-private[http4s] class Caching[F[_]: Concurrent: JavaTime] private[http4s] (cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType){
+private[http4s] class Caching[F[_]: Concurrent: Clock] private[http4s] (cache: Cache[F, (Method, Uri), CacheItem], cacheType: CacheType){
 
   def request[G[_]: FlatMap](app: Kleisli[G, Request[F], Response[F]], fk: F ~> G)(req: Request[F]): G[Response[F]] = {
     if (CacheRules.requestCanUseCached(req)) {
       for {
         cachedValue <- fk(cache.lookup((req.method, req.uri)))
-        now <- fk(JavaTime[F].getInstant.map(HttpDate.fromInstant(_)).rethrow)
+        now <- fk(HttpDate.current[F])
         out <- cachedValue match {
           case None => 
             if (CacheRules.onlyIfCached(req)) fk(Response[F](Status.GatewayTimeout).pure[F])
@@ -62,7 +61,7 @@ private[http4s] class Caching[F[_]: Concurrent: JavaTime] private[http4s] (cache
                 )
             case _ => CachedResponse.fromResponse[F, F](resp)
           }
-          now <- JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow
+          now <- HttpDate.current[F]
           expires = CacheRules.FreshnessAndExpiration.getExpires(now, resp)
           item <- CacheItem.create(cachedResp, expires.some)
           _ <- cache.insert((req.method, req.uri), item)
