@@ -1,9 +1,4 @@
----
-layout: home
-
----
-
-# mules-http4s - Http4s Caching Implementation [![Build Status](https://travis-ci.com/ChristopherDavenport/mules-http4s.svg?branch=master)](https://travis-ci.com/ChristopherDavenport/mules-http4s) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.chrisdavenport/mules-http4s_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.chrisdavenport/mules-http4s_2.12)
+# mules-http4s - Http4s Caching Implementation [![Maven Central](https://maven-badges.herokuapp.com/maven-central/io.chrisdavenport/mules-http4s_2.12/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.chrisdavenport/mules-http4s_2.12)
 
 ## Quick Start
 

@@ -18,7 +18,7 @@ final case class CacheItem(
 
 object CacheItem {
 
-  def create[F[_]: JavaTime: MonadError[*[_], Throwable]](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] = 
+  def create[F[_]: JavaTime: MonadThrow](response: CachedResponse, expires: Option[HttpDate]): F[CacheItem] =
     JavaTime[F].getInstant.map(HttpDate.fromInstant).rethrow.map(date => 
       new CacheItem(date, expires, response)
     )
