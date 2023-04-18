@@ -17,7 +17,7 @@ package object codecs {
   private[codecs] val httpVersionCodec: Codec[HttpVersion] = {
     def decode(major: Int, minor: Int): Attempt[HttpVersion] = 
       Attempt.fromEither(HttpVersion.fromVersion(major, minor).leftMap(p => Err.apply(p.message)))
-    (int8 :: int8).exmap(
+    (int8 :: int8).as[(Int, Int)].exmap(
       decode,
       httpVersion => Attempt.successful(httpVersion.major -> httpVersion.minor )
     )
@@ -62,7 +62,7 @@ package object codecs {
         uri =>  Attempt.successful(uri.renderString)
       )
 
-  val keyTupleCodec : Codec[(Method, Uri)] = method :: uri
+  val keyTupleCodec : Codec[(Method, Uri)] = (method :: uri).as[(Method, Uri)]
 
   val cachedResponseCodec : Codec[CachedResponse] = 
     (statusCodec :: httpVersionCodec :: headersCodec :: variableSizeBytesLong(int64, bytes)).as[CachedResponse]
