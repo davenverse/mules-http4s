@@ -17,6 +17,10 @@ ThisBuild / tlSonatypeUseLegacyHost := true
 ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.8", "3.2.2")
 ThisBuild / scalaVersion := "3.2.2"
 
+
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
+ThisBuild / tlJdkRelease := Some(8)
+
 val catsV = "2.9.0"
 val catsEffectV = "3.4.8"
 val fs2V = "3.2.7"
