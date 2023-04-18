@@ -51,7 +51,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.http4s"                  %%% "http4s-client"              % http4sV,
 
       "io.chrisdavenport"           %%% "mules"                      % mulesV,
-      "io.chrisdavenport"           %%% "cats-effect-time"           % "0.2.1",
+      
       "org.specs2"                  %%% "specs2-core"                % specs2V       % Test,
       "org.specs2"                  %%% "specs2-scalacheck"          % specs2V       % Test,
       "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.3.2"       % Test,
