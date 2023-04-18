@@ -64,7 +64,7 @@ package object codecs {
 
   val keyTupleCodec : Codec[(Method, Uri)] = (method :: uri).as[(Method, Uri)]
 
-  val cachedResponseCodec : Codec[CachedResponse] = 
+  val cachedResponseCodec : Codec[CachedResponse] =
     (statusCodec :: httpVersionCodec :: headersCodec :: variableSizeBytesLong(int64, bytes)).as[CachedResponse]
 
   val cacheItemCodec: Codec[CacheItem] = (httpDateCodec :: optional(bool, httpDateCodec) :: cachedResponseCodec).as[CacheItem]

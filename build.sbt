@@ -84,7 +84,7 @@ lazy val site = project.in(file("site"))
     Seq(
       libraryDependencies ++= Seq(
         "io.chrisdavenport" %%% "mules-caffeine" % mulesV,
-        "org.http4s" %%% "http4s-async-http-client" % http4sV,
+        "org.http4s" %%% "http4s-ember-client" % http4sV,
       )
     )
   }

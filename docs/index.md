@@ -24,7 +24,7 @@ import io.chrisdavenport.mules.http4s._
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.client.Client
-import org.http4s.asynchttpclient.client._
+import org.http4s.ember.client.EmberClientBuilder
 
 def testMiddleware[F[_]: Concurrent](c: Client[F], ref: Ref[F, Int]): Client[F] = {
   Client{req => c.run(req).evalMap(resp => ref.update(_ + 1).as(resp))}
@@ -32,7 +32,7 @@ def testMiddleware[F[_]: Concurrent](c: Client[F], ref: Ref[F, Int]): Client[F] 
 
 val jQueryRequest = Request[IO](Method.GET, uri"https://code.jquery.com/jquery-3.4.1.slim.min.js")
 
-val exampleCached = AsyncHttpClient.resource[IO]().use{ client => 
+val exampleCached = EmberClientBuilder.default[IO].build.use{ client =>
     for {
     cache <- CaffeineCache.build[IO, (Method, Uri), CacheItem](None, None, 10000L.some)
     counter <- Ref[IO].of(0)
@@ -51,7 +51,7 @@ exampleCached.unsafeRunSync()
 
 val dadJokesRequest = Request[IO](Method.GET, uri"https://icanhazdadjoke.com/")
 
-val exampleUnCached = AsyncHttpClient.resource[IO]().use{ client => 
+val exampleUnCached = EmberClientBuilder.default[IO].build.use{ client => 
     for {
     cache <- CaffeineCache.build[IO, (Method, Uri), CacheItem](None, None, 10000L.some)
     counter <- Ref[IO].of(0)
