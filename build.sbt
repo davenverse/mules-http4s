@@ -22,7 +22,7 @@ ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
 ThisBuild / tlJdkRelease := Some(8)
 
 val catsV = "2.9.0"
-val catsEffectV = "3.4.8"
+val catsEffectV = "3.4.9"
 val fs2V = "3.6.1"
 val scodecCatsV = "1.2.0"
 val http4sV = "0.23.18"
