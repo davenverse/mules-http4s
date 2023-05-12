@@ -23,7 +23,7 @@ ThisBuild / tlJdkRelease := Some(8)
 
 val catsV = "2.9.0"
 val catsEffectV = "3.4.9"
-val fs2V = "3.6.1"
+val fs2V = "3.7.0"
 val scodecCatsV = "1.2.0"
 val http4sV = "0.23.18"
 val circeV = "0.14.5"
