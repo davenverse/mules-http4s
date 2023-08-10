@@ -27,7 +27,7 @@ val fs2V = "3.6.1"
 val scodecCatsV = "1.2.0"
 val http4sV = "0.23.18"
 val circeV = "0.14.5"
-val specs2V = "4.20.0"
+val specs2V = "4.20.2"
 
 val mulesV = "0.7.0"
 
