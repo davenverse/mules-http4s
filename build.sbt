@@ -57,7 +57,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.3.2"       % Test,
       "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
-      "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
+      "com.comcast"                 %%% "ip4s-test-kit"              % "3.4.0"       % Test
     )
   ).jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
@@ -79,7 +79,7 @@ lazy val scodec = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.3.2"       % Test,
       "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
-      "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
+      "com.comcast"                 %%% "ip4s-test-kit"              % "3.4.0"       % Test
     )
   ).jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
