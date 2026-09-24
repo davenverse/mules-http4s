@@ -1,4 +1,4 @@
-ThisBuild / tlBaseVersion := "0.4" // your current series x.y
+ThisBuild / tlBaseVersion := "0.5" // your current series x.y
 
 ThisBuild / organization := "io.chrisdavenport"
 ThisBuild / organizationName := "Christopher Davenport"
@@ -10,12 +10,8 @@ ThisBuild / developers := List(
 
 ThisBuild / tlCiReleaseBranches := Seq("main")
 
-// true by default, set to false to publish to s01.oss.sonatype.org
-ThisBuild / tlSonatypeUseLegacyHost := true
-
-
-ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.8", "3.2.2")
-ThisBuild / scalaVersion := "3.2.2"
+ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.18", "3.3.8")
+ThisBuild / scalaVersion := "3.3.8"
 
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
@@ -87,6 +83,13 @@ lazy val scodec = crossProject(JVMPlatform, JSPlatform, NativePlatform)
 
 lazy val site = project.in(file("site"))
   .enablePlugins(TypelevelSitePlugin)
+  .settings(
+    laikaTheme := tlSiteHelium.value.site
+      .topNavigationBar(
+        homeLink = laika.helium.config.IconLink.internal(laika.ast.Path.Root / "index.md", laika.helium.config.HeliumIcon.home)
+      )
+      .build
+  )
   .dependsOn(core.jvm)
   .settings{
     Seq(
