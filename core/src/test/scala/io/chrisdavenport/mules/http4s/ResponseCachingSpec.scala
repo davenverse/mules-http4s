@@ -154,6 +154,199 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsEffe
       }
     }
 
+    "public cache does not serve an authorized response to a later unauthenticated request" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(
+                    CacheDirective.`max-age`(lifetime)
+                  )
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
+        newApp = cached(httpApp)
+        authorized = Request[IO]().putHeaders(
+          Authorization(Credentials.Token(AuthScheme.Bearer, "a-users-secret-token"))
+        )
+        anonymous = Request[IO]()
+
+        firstResp <- newApp.run(authorized)
+        first <- firstResp.as[String]
+
+        secondResp <- newApp.run(anonymous)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","1"))
+      }
+    }
+
+    "public cache does cache an authorized response explicitly marked public" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(
+                    CacheDirective.public,
+                    CacheDirective.`max-age`(lifetime)
+                  )
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
+        newApp = cached(httpApp)
+        authorized = Request[IO]().putHeaders(
+          Authorization(Credentials.Token(AuthScheme.Bearer, "a-users-secret-token"))
+        )
+
+        firstResp <- newApp.run(authorized)
+        first <- firstResp.as[String]
+
+        secondResp <- newApp.run(authorized)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","0"))
+      }
+    }
+
+    "private cache still caches an authorized response" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(
+                    CacheDirective.`max-age`(lifetime)
+                  )
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Private)
+        newApp = cached(httpApp)
+        authorized = Request[IO]().putHeaders(
+          Authorization(Credentials.Token(AuthScheme.Bearer, "a-users-secret-token"))
+        )
+
+        firstResp <- newApp.run(authorized)
+        first <- firstResp.as[String]
+
+        secondResp <- newApp.run(authorized)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","0"))
+      }
+    }
+
+    "min-fresh is satisfied by a response that stays fresh for long enough" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(
+                    CacheDirective.public,
+                    CacheDirective.`max-age`(lifetime)
+                  )
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
+        newApp = cached(httpApp)
+        request = Request[IO]()
+        // 24h of remaining freshness comfortably exceeds the 60s demanded.
+        demanding = Request[IO]().putHeaders(
+          `Cache-Control`(NonEmptyList.of(CacheDirective.`min-fresh`(60.seconds)))
+        )
+
+        firstResp <- newApp.run(request)
+        first <- firstResp.as[String]
+
+        secondResp <- newApp.run(demanding)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","0"))
+      }
+    }
+
+    "min-fresh is not satisfied by a response that goes stale too soon" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 30.seconds
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(
+                    CacheDirective.public,
+                    CacheDirective.`max-age`(lifetime)
+                  )
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
+        newApp = cached(httpApp)
+        request = Request[IO]()
+        // Only ~30s of freshness remains, so an hour's worth cannot be met.
+        demanding = Request[IO]().putHeaders(
+          `Cache-Control`(NonEmptyList.of(CacheDirective.`min-fresh`(1.hour)))
+        )
+
+        firstResp <- newApp.run(request)
+        first <- firstResp.as[String]
+
+        secondResp <- newApp.run(demanding)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","1"))
+      }
+    }
+
     "cached value expires after time" in {
       for {
         cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
