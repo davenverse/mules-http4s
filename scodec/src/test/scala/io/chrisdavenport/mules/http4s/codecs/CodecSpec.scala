@@ -72,4 +72,34 @@ class CodecSpec extends org.specs2.mutable.Specification with org.specs2.ScalaCh
       }
     }}
   }
+
+  // cachedResponseCodec ends in variableSizeBytesLong(int64, bytes), so the
+  // body length is taken from the wire. Anyone who can write to the cache store
+  // controls it. These pin that an absurd declared length is rejected on the
+  // available-bits check rather than driving an allocation.
+  "A hostile length prefix" should {
+    "be rejected without allocating the declared size" in {
+      import _root_.scodec.bits._
+      import _root_.scodec.codecs._
+      // status(int16) ++ version(int8, int8) ++ headers(string32, empty)
+      val prelude = hex"00c8".bits ++ hex"0101".bits ++ int32.encode(0).require
+      val absurd = prelude ++ int64.encode(Long.MaxValue / 8).require ++ hex"00".bits
+
+      val started = System.currentTimeMillis()
+      val result = cachedResponseCodec.decode(absurd)
+      val elapsed = System.currentTimeMillis() - started
+
+      (result.toEither must beLeft) and (elapsed must be_<(5000L))
+    }
+
+    "be rejected when it merely overstates a present body" in {
+      import _root_.scodec.bits._
+      import _root_.scodec.codecs._
+      val prelude = hex"00c8".bits ++ hex"0101".bits ++ int32.encode(0).require
+      // Claims 1 MiB of body, supplies one byte.
+      val overstated = prelude ++ int64.encode(1048576L).require ++ hex"00".bits
+
+      cachedResponseCodec.decode(overstated).toEither must beLeft
+    }
+  }
 }
