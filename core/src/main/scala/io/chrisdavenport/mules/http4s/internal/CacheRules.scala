@@ -75,7 +75,7 @@ private[http4s] object CacheRules {
           for {
             minFresh <- values.toList.collectFirst{case CacheDirective.`min-fresh`(seconds) => seconds}
             expiresAt <- item.expires
-          } yield (expiresAt.epochSecond - now.epochSecond).seconds <= minFresh
+          } yield (expiresAt.epochSecond - now.epochSecond).seconds >= minFresh
         }.getOrElse(true)
         
         // println(s"Age- $age, Lifetime- $lifetime, maxAgeMet: $maxAgeMet, maxStaleMet: $maxStaleMet, minFreshMet: $minFreshMet")
@@ -108,7 +108,9 @@ private[http4s] object CacheRules {
       case _ => false
     }
 
-  def authorizationHeaderExists[F[_]](response: Response[F]): Boolean = response.headers
+  // Authorization is a request header. RFC 9111 section 3.5 conditions shared
+  // caching on the Authorization of the *request*, not of the response.
+  def authorizationHeaderExists[F[_]](request: Request[F]): Boolean = request.headers
     .get[Authorization]
     .isDefined
 
@@ -145,7 +147,7 @@ private[http4s] object CacheRules {
     } else if (cacheType.isShared && response.headers.get(CIString("Vary")).exists(h => h.exists(_.value === "*"))) {
       // println("Cache is shared and Vary header exists as * - not Cacheable")
       false
-    } else if (cacheType.isShared && authorizationHeaderExists(response) && !cacheControlPublicExists(response)) {
+    } else if (cacheType.isShared && authorizationHeaderExists(req) && !cacheControlPublicExists(response)) {
       // println("Cache is Shared and Authorization Header is present and Cache-Control public is not present - not Cacheable")
       false
     } else if (mustRevalidate(response) && !(response.headers.get[ETag].isDefined || response.headers.get[`Last-Modified`].isDefined)) {
