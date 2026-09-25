@@ -23,9 +23,13 @@ private[http4s] class Caching[F[_]: Concurrent: Clock] private[http4s] (cache: C
               app.run(req)
               .flatMap(resp => fk(withResponse(req, resp)))
             }
-          case Some(item) => 
+          case Some(item) if !CacheRules.varyMatches(req, item.response) =>
+            // Stored under the same (method, uri) but for a request that
+            // differs in a header the origin varies on. Not ours to serve.
+            app.run(req).flatMap(resp => fk(withResponse(req, resp)))
+          case Some(item) =>
             if (CacheRules.cacheAgeAcceptable(req, item, now)) {
-              fk(item.response.toResponse[F].pure[F])
+              fk(CacheRules.withoutVaryKey(item.response).toResponse[F].pure[F])
             } else {
               app.run(
                 req
@@ -63,9 +67,12 @@ private[http4s] class Caching[F[_]: Concurrent: Clock] private[http4s] (cache: C
           }
           now <- HttpDate.current[F]
           expires = CacheRules.FreshnessAndExpiration.getExpires(now, resp)
-          item <- CacheItem.create(cachedResp, expires.some)
+          // Record which request this was produced for, so a later lookup can
+          // tell whether the stored entry is a legitimate match.
+          stored = CacheRules.withVaryKey(req, cachedResp)
+          item <- CacheItem.create(stored, expires.some)
           _ <- cache.insert((req.method, req.uri), item)
-        } yield cachedResp.toResponse[F]
+        } yield CacheRules.withoutVaryKey(stored).toResponse[F]
       
       } else {
         resp.pure[F]

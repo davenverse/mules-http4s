@@ -347,6 +347,143 @@ class ResponseCachingSpec extends org.specs2.mutable.Specification with CatsEffe
       }
     }
 
+    "a shared cache does not serve one user's varied response to another" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(CacheDirective.public, CacheDirective.`max-age`(lifetime))
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+                ("Vary", "Cookie"),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
+        newApp = cached(httpApp)
+        userA = Request[IO]().putHeaders(("Cookie", "session=aaa"))
+        userB = Request[IO]().putHeaders(("Cookie", "session=bbb"))
+
+        firstResp <- newApp.run(userA)
+        first <- firstResp.as[String]
+
+        secondResp <- newApp.run(userB)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","1"))
+      }
+    }
+
+    "a varied response is still reused for a matching request" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(CacheDirective.public, CacheDirective.`max-age`(lifetime))
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+                ("Vary", "Accept-Encoding"),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
+        newApp = cached(httpApp)
+        request = Request[IO]().putHeaders(("Accept-Encoding", "gzip"))
+
+        firstResp <- newApp.run(request)
+        first <- firstResp.as[String]
+
+        secondResp <- newApp.run(request)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","0"))
+      }
+    }
+
+    "a private cache also honours Vary" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        ref <- Ref[IO].of(0)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => ref.modify(i => (i+1, i)).map{i =>
+            Response[IO](Status.Ok)
+              .withEntity(i.toString())
+              .withHeaders(
+                `Cache-Control`(NonEmptyList.of(CacheDirective.`max-age`(lifetime))),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+                ("Vary", "Accept-Encoding"),
+              )
+          }
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Private)
+        newApp = cached(httpApp)
+        gzip = Request[IO]().putHeaders(("Accept-Encoding", "gzip"))
+        plain = Request[IO]()
+
+        firstResp <- newApp.run(gzip)
+        first <- firstResp.as[String]
+
+        // Serving the gzip variant here would be a content-negotiation bug
+        // even though a private cache has no cross-user exposure.
+        secondResp <- newApp.run(plain)
+        second <- secondResp.as[String]
+      } yield {
+        (first, second) must_===(("0","1"))
+      }
+    }
+
+    "the internal vary key is never served to a client" in {
+      for {
+        cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)
+        now <- HttpDate.current[IO]
+        lifetime = 24.hours
+        httpApp = HttpRoutes.of[IO]{
+          case _ => IO.pure(
+            Response[IO](Status.Ok)
+              .withEntity("body")
+              .withHeaders(
+                `Cache-Control`(
+                  NonEmptyList.of(CacheDirective.public, CacheDirective.`max-age`(lifetime))
+                ),
+                Date(now),
+                Expires(HttpDate.unsafeFromEpochSecond(now.epochSecond + lifetime.toSeconds)),
+                ("Vary", "Accept-Encoding"),
+              )
+          )
+        }.orNotFound
+        cached = CacheMiddleware.httpApp(cache, CacheType.Public)
+        newApp = cached(httpApp)
+        request = Request[IO]().putHeaders(("Accept-Encoding", "gzip"))
+
+        // once on the store path, once on the serve-from-cache path
+        firstResp <- newApp.run(request)
+        secondResp <- newApp.run(request)
+      } yield {
+        val name = org.typelevel.ci.CIString("X-Mules-Http4s-Vary-Key")
+        (firstResp.headers.get(name) must beNone) and
+          (secondResp.headers.get(name) must beNone)
+      }
+    }
+
     "cached value expires after time" in {
       for {
         cache <- io.chrisdavenport.mules.MemoryCache.ofConcurrentHashMap[IO,(Method, Uri), CacheItem](None)

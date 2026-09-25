@@ -161,6 +161,84 @@ private[http4s] object CacheRules {
     }
   }
 
+  /**
+   * Internal header recording which request produced a stored response.
+   *
+   * The cache is keyed on (method, uri), so it cannot by itself distinguish
+   * two requests to the same URI that differ in a header the origin varies
+   * on. This records the selecting values alongside the stored response;
+   * lookup compares them and treats a mismatch as a miss. It is stripped
+   * before the response is handed back, so it never reaches a client.
+   */
+  private[http4s] val varyKeyHeader = CIString("X-Mules-Http4s-Vary-Key")
+
+  private val varyHeader = CIString("Vary")
+
+  /**
+   * The field names a response varies on, lowercased and ordered so the key is
+   * stable. `None` means the response does not vary. An empty list means it
+   * varies on `*`, which by RFC 9111 section 4.1 never matches a subsequent
+   * request.
+   */
+  private[http4s] def varyFieldNames(headers: Headers): Option[List[CIString]] =
+    headers.get(varyHeader).map { vs =>
+      val raw = vs.toList.flatMap(_.value.split(',').toList).map(_.trim).filter(_.nonEmpty)
+      if (raw.exists(_ === "*")) Nil
+      else raw.map(s => CIString(s.toLowerCase)).distinct.sorted
+    }
+
+  /**
+   * A stable description of the values `req` carries for `names`.
+   *
+   * Values are stored verbatim rather than hashed: a collision would serve one
+   * request's response to another, which is the failure this exists to
+   * prevent, and no cross-platform strong digest is available here. Note this
+   * means the selecting request headers are persisted with the entry -- a
+   * reason not to point a shared cache at an origin that sends `Vary: Cookie`.
+   */
+  private[http4s] def varyKeyFor[F[_]](req: Request[F], names: List[CIString]): String =
+    names
+      .map { name =>
+        val values = req.headers.headers.filter(_.name === name).map(_.value)
+        // Absent and present-but-empty must not describe the same request.
+        if (values.isEmpty) s"${name}\u0000<absent>"
+        else s"${name}\u0000${values.mkString("\u0001")}"
+      }
+      .mkString("\u0002")
+
+  /**
+   * Whether a stored response may be used for this request.
+   *
+   * A stored response that varies but carries no recorded key predates this
+   * check, so it is treated as non-matching rather than assumed safe.
+   */
+  private[http4s] def varyMatches[F[_]](req: Request[F], cached: CachedResponse): Boolean =
+    varyFieldNames(cached.headers) match {
+      case None => true
+      case Some(Nil) => false // Vary: * never matches
+      case Some(names) =>
+        cached.headers
+          .get(varyKeyHeader)
+          .map(_.head.value)
+          .exists(_ === varyKeyFor(req, names))
+    }
+
+  /** Records the selecting values on a response about to be stored. */
+  private[http4s] def withVaryKey[F[_]](req: Request[F], cached: CachedResponse): CachedResponse =
+    varyFieldNames(cached.headers) match {
+      case Some(names) if names.nonEmpty =>
+        cached.withHeaders(
+          cached.headers.put(Header.Raw(varyKeyHeader, varyKeyFor(req, names)))
+        )
+      case _ => cached
+    }
+
+  /** Removes the internal key so it is never served to a client. */
+  private[http4s] def withoutVaryKey(cached: CachedResponse): CachedResponse =
+    if (cached.headers.get(varyKeyHeader).isDefined)
+      cached.withHeaders(Headers(cached.headers.headers.filterNot(_.name === varyKeyHeader)))
+    else cached
+
   def shouldInvalidate[F[_]](request: Request[F], response: Response[F]): Boolean = {
     if (Set(Status.NotFound, Status.Gone).contains(response.status)) {
       true
