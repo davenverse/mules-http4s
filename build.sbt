@@ -25,7 +25,7 @@ val http4sV = "0.23.37"
 val circeV = "0.14.5"
 val specs2V = "4.20.0"
 
-val mulesV = "0.7.2"
+val mulesV = "0.8.0"
 
 // Projects
 lazy val `mules-http4s` = tlCrossRootProject
@@ -50,7 +50,7 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       
       "org.specs2"                  %%% "specs2-core"                % specs2V       % Test,
       "org.specs2"                  %%% "specs2-scalacheck"          % specs2V       % Test,
-      "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.3.2"       % Test,
+      "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.5.0"       % Test,
       "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
       "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
@@ -72,7 +72,7 @@ lazy val scodec = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.scodec"                  %%% "scodec-cats"                % scodecCatsV,
       "org.specs2"                  %%% "specs2-core"                % specs2V       % Test,
       "org.specs2"                  %%% "specs2-scalacheck"          % specs2V       % Test,
-      "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.3.2"       % Test,
+      "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.5.0"       % Test,
       "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
       "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
