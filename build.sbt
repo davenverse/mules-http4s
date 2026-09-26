@@ -10,18 +10,18 @@ ThisBuild / developers := List(
 
 ThisBuild / tlCiReleaseBranches := Seq()
 
-ThisBuild / crossScalaVersions := Seq("2.12.15", "2.13.18", "3.3.8")
+ThisBuild / crossScalaVersions := Seq("2.13.18", "3.3.8")
 ThisBuild / scalaVersion := "3.3.8"
 
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11"))
 ThisBuild / tlJdkRelease := Some(8)
 
-val catsV = "2.9.0"
-val catsEffectV = "3.4.9"
-val fs2V = "3.6.1"
+val catsV = "2.13.0"
+val catsEffectV = "3.7.1"
+val fs2V = "3.14.0"
 val scodecCatsV = "1.2.0"
-val http4sV = "0.23.18"
+val http4sV = "0.23.37"
 val circeV = "0.14.5"
 val specs2V = "4.20.0"
 
