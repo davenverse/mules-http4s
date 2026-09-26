@@ -20,10 +20,10 @@ ThisBuild / tlJdkRelease := Some(8)
 val catsV = "2.13.0"
 val catsEffectV = "3.7.1"
 val fs2V = "3.14.0"
-val scodecCatsV = "1.2.0"
+val scodecCatsV = "1.3.0"
 val http4sV = "0.23.37"
 val circeV = "0.14.5"
-val specs2V = "4.20.0"
+val specs2V = "4.20.9"
 
 val mulesV = "0.8.0"
 
@@ -51,9 +51,9 @@ lazy val core = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.specs2"                  %%% "specs2-core"                % specs2V       % Test,
       "org.specs2"                  %%% "specs2-scalacheck"          % specs2V       % Test,
       "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.5.0"       % Test,
-      "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
+      "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.8.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
-      "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
+      "com.comcast"                 %%% "ip4s-test-kit"              % "3.8.0"       % Test
     )
   ).jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
@@ -67,15 +67,15 @@ lazy val scodec = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     name := "mules-http4s-scodec",
     libraryDependencies ++= Seq(
       "org.scodec" %%% "scodec-core" % (
-        if (scalaVersion.value.startsWith("2.")) "1.11.10" else "2.2.1"
+        if (scalaVersion.value.startsWith("2.")) "1.11.11" else "2.3.3"
       ),
       "org.scodec"                  %%% "scodec-cats"                % scodecCatsV,
       "org.specs2"                  %%% "specs2-core"                % specs2V       % Test,
       "org.specs2"                  %%% "specs2-scalacheck"          % specs2V       % Test,
       "io.chrisdavenport"           %%% "cats-scalacheck"            % "0.5.0"       % Test,
-      "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.5.0"       % Test,
+      "org.typelevel"               %%% "cats-effect-testing-specs2" % "1.8.0"       % Test,
       "org.http4s"                  %%% "http4s-dsl"                 % http4sV       % Test,
-      "com.comcast"                 %%% "ip4s-test-kit"              % "3.3.0"       % Test
+      "com.comcast"                 %%% "ip4s-test-kit"              % "3.8.0"       % Test
     )
   ).jsSettings(
     scalaJSLinkerConfig ~= (_.withModuleKind(ModuleKind.CommonJSModule))
